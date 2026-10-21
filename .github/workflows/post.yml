@@ -21,6 +21,9 @@ jobs:
       X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check X keys (manual runs only)
+        if: github.event_name == 'workflow_dispatch'
+        run: python3 scripts/x_api.py whoami
       - name: Post due queue items
         run: python3 scripts/post_due.py
       - name: Send queued replies
