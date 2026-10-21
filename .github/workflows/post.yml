@@ -1,9 +1,9 @@
 name: post
-# Every 15 minutes from 07:00 to 23:59 Beijing time (UTC+8). GitHub may start scheduled runs a few minutes late.
+# Every 30 minutes from 07:00 to 23:59 Beijing time (UTC+8). GitHub may start scheduled runs a few minutes late.
 on:
   schedule:
-    - cron: "*/15 23 * * *"
-    - cron: "*/15 0-15 * * *"
+    - cron: "3,33 23 * * *"
+    - cron: "3,33 0-15 * * *"
   workflow_dispatch:
 concurrency:
   group: post
