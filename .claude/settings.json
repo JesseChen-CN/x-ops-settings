@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -I /mnt/project-files/x-ops/scripts/post_due.py:*)",
+      "Bash(python3 -I /mnt/project-files/x-ops/scripts/x_api.py reply:*)"
+    ]
+  }
+}
