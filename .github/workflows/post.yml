@@ -1,0 +1,38 @@
+name: post
+# Every 15 minutes from 07:00 to 23:59 Beijing time (UTC+8). GitHub may start scheduled runs a few minutes late.
+on:
+  schedule:
+    - cron: "*/15 23 * * *"
+    - cron: "*/15 0-15 * * *"
+  workflow_dispatch:
+concurrency:
+  group: post
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      X_API_KEY: ${{ secrets.X_API_KEY }}
+      X_API_SECRET: ${{ secrets.X_API_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Post due queue items
+        run: python3 scripts/post_due.py
+      - name: Send queued replies
+        if: always()
+        run: python3 scripts/send_replies.py
+      - name: Save results
+        if: always()
+        run: |
+          git config user.name "x-ops bot"
+          git config user.email "x-ops-bot@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet && exit 0
+          git commit -m "Record posting results"
+          for i in 1 2 3 4; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep $((i*5)); done
+          exit 1

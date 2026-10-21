@@ -1,0 +1,6 @@
+{
+  "posting_enabled": false,
+  "replies_enabled": false,
+  "daily_limit": 30,
+  "note": "Switches for GitHub Actions posting. repo_sync.py copies daily_limit from the project config; the two switches are flipped only at switch-over."
+}
