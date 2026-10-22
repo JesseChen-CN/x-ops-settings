@@ -141,9 +141,11 @@ if os.environ.get("ANTHROPIC_API_KEY"):
         sys.exit(f"Claude stopped with {resp.stop_reason}; nothing sent")
     out = json.loads(next(b.text for b in resp.content if b.type == "text"))["replies"]
 else:   # Claude Code on the subscription, no tools, structured output
+    # a token pasted from a wrapped terminal line can carry line breaks
+    env = dict(os.environ, CLAUDE_CODE_OAUTH_TOKEN="".join(os.environ["CLAUDE_CODE_OAUTH_TOKEN"].split()))
     cp = subprocess.run(["claude", "-p", msg, "--model", "claude-opus-5-5", "--effort", "low", "--tools", "",
                          "--no-session-persistence", "--system-prompt", system, "--output-format", "json",
-                         "--json-schema", json.dumps(schema)], capture_output=True, text=True, timeout=600)
+                         "--json-schema", json.dumps(schema)], capture_output=True, text=True, timeout=600, env=env)
     try: res = json.loads(cp.stdout)
     except ValueError: sys.exit(f"claude failed ({cp.returncode}): {(cp.stderr or cp.stdout)[:500]}")
     if res.get("is_error") or not res.get("structured_output"):
