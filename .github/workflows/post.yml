@@ -1,9 +1,10 @@
 name: post
-# Every 30 minutes from 07:00 to 23:59 Beijing time (UTC+8). GitHub may start scheduled runs a few minutes late.
+# Started every 5 minutes by cron-job.org (workflow_dispatch). The schedule below is only a backup: GitHub
+# often starts scheduled runs late or skips them. 07:00-23:59 Beijing time (UTC+8).
 on:
   schedule:
-    - cron: "3,33 23 * * *"
-    - cron: "3,33 0-15 * * *"
+    - cron: "*/5 23 * * *"
+    - cron: "*/5 0-15 * * *"
   workflow_dispatch:
 concurrency:
   group: post
@@ -21,9 +22,6 @@ jobs:
       X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
     steps:
       - uses: actions/checkout@v4
-      - name: Check X keys (manual runs only)
-        if: github.event_name == 'workflow_dispatch'
-        run: python3 scripts/x_api.py whoami
       - name: Post due queue items
         run: python3 scripts/post_due.py
       - name: Save results

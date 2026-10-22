@@ -12,7 +12,7 @@ import x_api
 TZ = zoneinfo.ZoneInfo("Asia/Shanghai")
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 dry = "--dry-run" in sys.argv
-maxn = int(sys.argv[sys.argv.index("--max") + 1]) if "--max" in sys.argv else 2
+maxn = int(sys.argv[sys.argv.index("--max") + 1]) if "--max" in sys.argv else 1
 cfg = json.load(open(f"{DATA}/config.json"))
 if not cfg.get("posting_enabled"):
     print("posting disabled in data/config.json"); sys.exit(0)
@@ -26,6 +26,11 @@ q = json.load(open(qf))
 rf = f"{DATA}/results/{now:%Y-%m-%d}.json"
 res = json.load(open(rf)) if os.path.exists(rf) else {}
 posted_today = sum(1 for r in res.values() if r["status"] == "posted")
+# Gap (Jesse 2026-10-22): at least min_gap_minutes between two posts, counting posts made from the project too
+times = [r["posted_at"] for r in res.values() if r.get("posted_at")] + [p["posted_at"] for p in q["posts"] if p.get("posted_at")]
+last = max((datetime.datetime.fromisoformat(t) for t in times), default=None)
+if last and now - last < datetime.timedelta(minutes=cfg.get("min_gap_minutes", 15)):
+    print("last post at", last.isoformat(timespec="minutes"), "- waiting for the gap"); sys.exit(0)
 n = 0
 for p in sorted(q["posts"], key=lambda x: x["time"]):
     if p.get("status") != "approved" or p["id"] in res: continue
