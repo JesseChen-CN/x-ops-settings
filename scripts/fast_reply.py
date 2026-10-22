@@ -9,8 +9,8 @@ late). To save read cost (Jesse 2026-10-22) each run reads only from state read_
 to me inside conversations started by my own posts, less than 24 h old, one reply per person per post (newest comment
 wins). A follow-up under one of my replies counts as a new comment. Skips comments already answered: by this script
 (state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only).
-A person who repeats a comment (same or nearly the same text as one of their earlier comments) is muted for good:
-state muted, none of their comments get a reply again. Right before each send it
+Someone who sends the same (or nearly the same) comment twice in a row under one of my posts is muted under that
+post (state muted "<person>:<post>"); their comments under other posts still get replies. Right before each send it
 also asks X whether I already replied to that comment.
 State: data/fast_reply/state.json. Log of sent replies: data/fast_reply/log/YYYY-MM-DD.jsonl.
 Claude: ANTHROPIC_API_KEY (Claude API) or CLAUDE_CODE_OAUTH_TOKEN (Claude Code on Jesse's subscription, `claude
@@ -99,24 +99,30 @@ st["my_posts"] = sorted(mine, key=int)[-500:]
 done = answered | set(st.get("replied", [])) | set(st.get("skipped", []))
 cut = now - datetime.timedelta(hours=24)
 
-# Jesse 2026-10-22: a person who sends the same (or nearly the same) comment twice gets no more replies, ever.
-# history: the last comments of each person (ids + text without @names, links, emoji, punctuation), plus the log.
+# Jesse 2026-10-22: someone who sends the same (or nearly the same) comment twice in a row under the same post of mine
+# gets no more replies under that post (other posts are not affected).
+# history: each person's last comments, {id: [post, text without @names, links, emoji, punctuation]}, plus the log.
 def norm(s): return "".join(re.findall(r"[\u4e00-\u9fff0-9a-z]", re.sub(r"@\w+|https?://\S+", "", s.lower())))
 def same(a, b): return a == b or (min(len(a), len(b)) >= 6 and difflib.SequenceMatcher(None, a, b).ratio() >= 0.85)
-hist, muted = st.setdefault("history", {}), st.setdefault("muted", {})
+hist = {k: v for k, v in st.get("history", {}).items() if all(isinstance(x, list) for x in v.values())}
+muted = {k: v for k, v in st.get("muted", {}).items() if ":" in k}   # "<person id>:<post id>"
+st["history"], st["muted"] = hist, muted
 for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-7:]:
     for l in open(f):
-        if l.strip(): x = json.loads(l); hist.setdefault("@" + x["commenter"], {})[x["comment_id"]] = norm(x["comment"])
+        if not l.strip(): continue
+        x = json.loads(l)
+        if x.get("post"): hist.setdefault("@" + x["commenter"], {})[x["comment_id"]] = [x["post"], norm(x["comment"])]
 for t in sorted(tweets, key=lambda t: int(t["id"])):
-    a = t["author_id"]
-    if a == uid or t.get("in_reply_to_user_id") != uid or t["conversation_id"] not in mine: continue
+    a, c = t["author_id"], t["conversation_id"]
+    if a == uid or t.get("in_reply_to_user_id") != uid or c not in mine: continue
     n = norm(t["text"])
     if not n: continue
     prev = {**hist.get("@" + users.get(a, ""), {}), **hist.get(a, {})}
-    if a not in muted and any(same(n, v) for k, v in prev.items() if k != t["id"]):
-        muted[a] = users.get(a, "")
-        print(f"@{muted[a]} repeated a comment ({t['text'][:30]}); no more replies to them")
-    hist.setdefault(a, {})[t["id"]] = n
+    last = max((k for k, v in prev.items() if v[0] == c and int(k) < int(t["id"])), key=int, default=None)
+    if last and f"{a}:{c}" not in muted and same(n, prev[last][1]):
+        muted[f"{a}:{c}"] = users.get(a, "")
+        print(f"@{users.get(a, '')} repeated a comment under post {c} ({t['text'][:30]}); no more replies there")
+    hist.setdefault(a, {})[t["id"]] = [c, n]
 for k in list(hist):   # keep 20 comments per person, 2000 people; log-based entries are rebuilt each run
     if k.startswith("@"): hist.pop(k); continue
     hist[k] = dict(sorted(hist[k].items(), key=lambda kv: int(kv[0]))[-20:])
@@ -127,7 +133,7 @@ for t in tweets:
     parent = next((r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"), None)
     if t["author_id"] == uid or t.get("in_reply_to_user_id") != uid or not parent or t["id"] in done: continue
     if t["conversation_id"] not in mine: continue
-    if t["author_id"] in muted:   # never list again, so read_from can move on
+    if f"{t['author_id']}:{t['conversation_id']}" in muted:   # never list again, so read_from can move on
         st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; done.add(t["id"]); continue
     if not re.search(r"[\u4e00-\u9fff]", t["text"]): continue   # Jesse 2026-10-22: only reply to comments with Chinese in them
     if datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) < cut: continue
@@ -154,7 +160,7 @@ for t in todo:
     ptxt = clean(refs.get(t["parent"], {}).get("text", ""))
     if t["parent"] in cards: ptxt = (ptxt + "\n[配图文字卡片] " + cards[t["parent"]]).strip()
     items.append({"comment_id": t["id"], "commenter": users.get(t["author_id"], ""),
-                  "my_post": ptxt or "（只有图片，看不到内容）", "comment": clean(t["text"]) or "（只有图片或表情）"})
+                  "post": t["conversation_id"], "my_post": ptxt or "（只有图片，看不到内容）", "comment": clean(t["text"]) or "（只有图片或表情）"})
 
 # 4. Claude writes the replies
 recent = []
@@ -220,7 +226,7 @@ for x in rows:
     st["replied"] = st["replied"][-3000:]
     log.write(json.dumps({"at": datetime.datetime.now(TZ).isoformat(timespec="seconds"), "comment_id": x["comment_id"],
                           "reply_id": js.get("data", {}).get("id"), "commenter": x["commenter"],
-                          "comment": x["comment"], "text": x["text"]}, ensure_ascii=False) + "\n")
+                          "post": x["post"], "comment": x["comment"], "text": x["text"]}, ensure_ascii=False) + "\n")
     log.flush(); save_state()
     print(f"@{x['commenter']}：{x['comment'][:20]} → {x['text']}")
 save_state()
