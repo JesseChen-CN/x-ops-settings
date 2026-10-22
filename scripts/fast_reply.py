@@ -8,12 +8,14 @@ late). To save read cost (Jesse 2026-10-22) each run reads only from state read_
 (search lag), or the oldest comment still left unanswered, never more than 60 minutes back. Keeps direct replies
 to me inside conversations started by my own posts, less than 24 h old, one reply per person per post (newest comment
 wins). A follow-up under one of my replies counts as a new comment. Skips comments already answered: by this script
-(state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only). Right before each send it
+(state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only).
+A person who repeats a comment (same or nearly the same text as one of their earlier comments) is muted for good:
+state muted, none of their comments get a reply again. Right before each send it
 also asks X whether I already replied to that comment.
 State: data/fast_reply/state.json. Log of sent replies: data/fast_reply/log/YYYY-MM-DD.jsonl.
 Claude: ANTHROPIC_API_KEY (Claude API) or CLAUDE_CODE_OAUTH_TOKEN (Claude Code on Jesse's subscription, `claude
 setup-token`). --dry-run writes the replies and prints them without sending or saving state."""
-import json, os, re, sys, glob, time, random, datetime, zoneinfo, subprocess, urllib.parse
+import json, os, re, sys, glob, time, random, datetime, zoneinfo, subprocess, urllib.parse, difflib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import x_api
 
@@ -96,11 +98,37 @@ for t in tweets:
 st["my_posts"] = sorted(mine, key=int)[-500:]
 done = answered | set(st.get("replied", [])) | set(st.get("skipped", []))
 cut = now - datetime.timedelta(hours=24)
+
+# Jesse 2026-10-22: a person who sends the same (or nearly the same) comment twice gets no more replies, ever.
+# history: the last comments of each person (ids + text without @names, links, emoji, punctuation), plus the log.
+def norm(s): return "".join(re.findall(r"[\u4e00-\u9fff0-9a-z]", re.sub(r"@\w+|https?://\S+", "", s.lower())))
+def same(a, b): return a == b or (min(len(a), len(b)) >= 6 and difflib.SequenceMatcher(None, a, b).ratio() >= 0.85)
+hist, muted = st.setdefault("history", {}), st.setdefault("muted", {})
+for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-7:]:
+    for l in open(f):
+        if l.strip(): x = json.loads(l); hist.setdefault("@" + x["commenter"], {})[x["comment_id"]] = norm(x["comment"])
+for t in sorted(tweets, key=lambda t: int(t["id"])):
+    a = t["author_id"]
+    if a == uid or t.get("in_reply_to_user_id") != uid or t["conversation_id"] not in mine: continue
+    n = norm(t["text"])
+    if not n: continue
+    prev = {**hist.get("@" + users.get(a, ""), {}), **hist.get(a, {})}
+    if a not in muted and any(same(n, v) for k, v in prev.items() if k != t["id"]):
+        muted[a] = users.get(a, "")
+        print(f"@{muted[a]} repeated a comment ({t['text'][:30]}); no more replies to them")
+    hist.setdefault(a, {})[t["id"]] = n
+for k in list(hist):   # keep 20 comments per person, 2000 people; log-based entries are rebuilt each run
+    if k.startswith("@"): hist.pop(k); continue
+    hist[k] = dict(sorted(hist[k].items(), key=lambda kv: int(kv[0]))[-20:])
+for k in sorted(hist, key=lambda k: max(map(int, hist[k])))[:-2000]: hist.pop(k)
+
 cands = {}
 for t in tweets:
     parent = next((r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"), None)
     if t["author_id"] == uid or t.get("in_reply_to_user_id") != uid or not parent or t["id"] in done: continue
     if t["conversation_id"] not in mine: continue
+    if t["author_id"] in muted:   # never list again, so read_from can move on
+        st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; done.add(t["id"]); continue
     if not re.search(r"[\u4e00-\u9fff]", t["text"]): continue   # Jesse 2026-10-22: only reply to comments with Chinese in them
     if datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) < cut: continue
     key = (t["author_id"], parent)
