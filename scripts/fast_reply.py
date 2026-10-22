@@ -7,7 +7,7 @@ Finding comments: mentions plus a `to:me is:reply` search over the last 60 minut
 leaves some replies out or shows them late; X bills a re-read of the same post in a UTC day once). Keeps direct replies
 to me inside conversations started by my own posts, less than 24 h old, one reply per person per post (newest comment
 wins). A follow-up under one of my replies counts as a new comment. Skips comments already answered: by this script
-(state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam. Right before each send it
+(state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only). Right before each send it
 also asks X whether I already replied to that comment.
 State: data/fast_reply/state.json. Log of sent replies: data/fast_reply/log/YYYY-MM-DD.jsonl.
 Claude: ANTHROPIC_API_KEY (Claude API) or CLAUDE_CODE_OAUTH_TOKEN (Claude Code on Jesse's subscription, `claude
@@ -93,6 +93,7 @@ for t in tweets:
     parent = next((r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"), None)
     if t["author_id"] == uid or t.get("in_reply_to_user_id") != uid or not parent or t["id"] in done: continue
     if t["conversation_id"] not in mine: continue
+    if not re.search(r"[\u4e00-\u9fff]", t["text"]): continue   # Jesse 2026-10-22: only reply to comments with Chinese in them
     if datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) < cut: continue
     key = (t["author_id"], parent)
     old = cands.get(key)
