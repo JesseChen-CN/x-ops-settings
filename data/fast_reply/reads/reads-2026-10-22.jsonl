@@ -1,1 +1,2 @@
 {"at": "2026-10-22T15:50:34+08:00", "script": "fast_reply.py", "posts": 33, "users": 14, "calls": {"/2/users/mentions": {"n": 2, "posts": 16, "users": 7}, "/2/tweets/search/recent": {"n": 1, "posts": 16, "users": 7}, "/2/users/tweets": {"n": 1, "posts": 1, "users": 0}}}
+{"at": "2026-10-22T15:55:32+08:00", "script": "fast_reply.py", "posts": 9, "users": 4, "calls": {"/2/users/mentions": {"n": 2, "posts": 4, "users": 2}, "/2/tweets/search/recent": {"n": 1, "posts": 4, "users": 2}, "/2/users/tweets": {"n": 1, "posts": 1, "users": 0}}}
