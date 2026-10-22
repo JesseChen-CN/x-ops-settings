@@ -25,7 +25,9 @@ if not os.path.exists(qf):
 q = json.load(open(qf))
 rf = f"{DATA}/results/{now:%Y-%m-%d}.json"
 res = json.load(open(rf)) if os.path.exists(rf) else {}
-posted_today = sum(1 for r in res.values() if r["status"] == "posted")
+# Extra posts (gm, 时事临时帖; queue field extra) don't count toward daily_limit (Jesse: the morning post is on top of the 20)
+extra = {p["id"] for p in q["posts"] if p.get("extra") or p["id"] == "gm"}
+posted_today = sum(1 for k, r in res.items() if r["status"] == "posted" and k not in extra)
 # Gap (Jesse 2026-10-22): at least min_gap_minutes between two posts, counting posts made from the project too
 times = [r["posted_at"] for r in res.values() if r.get("posted_at")] + [p["posted_at"] for p in q["posts"] if p.get("posted_at")]
 last = max((datetime.datetime.fromisoformat(t) for t in times), default=None)
@@ -36,8 +38,8 @@ for p in sorted(q["posts"], key=lambda x: x["time"]):
     if p.get("status") != "approved" or p["id"] in res: continue
     t = datetime.datetime.fromisoformat(f"{q['date']}T{p['time']}").replace(tzinfo=TZ)
     if t > now: continue
-    if posted_today >= cfg.get("daily_limit", 30):
-        print("daily limit reached"); break
+    if p["id"] not in extra and posted_today >= cfg.get("daily_limit", 30):
+        print("daily limit reached for", p["id"]); continue  # extras later in the day still go out
     if n >= maxn:
         print("more due items left for the next run"); break
     img = os.path.join(DATA, p["image"]) if p.get("image") else None
@@ -51,7 +53,7 @@ for p in sorted(q["posts"], key=lambda x: x["time"]):
     if code and code < 300:
         r = {"status": "posted", "tweet_id": js["data"]["id"], "url": f"https://x.com/i/status/{js['data']['id']}",
              "posted_at": datetime.datetime.now(TZ).isoformat(timespec="seconds")}
-        posted_today += 1
+        posted_today += p["id"] not in extra
     else:
         r = {"status": "error", "error": f"{code} {json.dumps(js, ensure_ascii=False)[:500]}"}
     res[p["id"]] = r; n += 1
