@@ -48,17 +48,17 @@
     {
       "id": "p06",
       "time": "10:03",
-      "status": "approved",
+      "status": "posted",
       "text": "发改委说要清理取消消费领域的不合理限制措施，扩大内需。先设限制，再取消限制，最后把取消写成成绩。这套流程最能拉动的内需，是开会。",
-      "image": "media/memes/cache/1214.jpg"
+      "posted_at": "2026-10-22T10:05:18+08:00"
     },
     {
       "id": "p07",
       "time": "10:37",
-      "status": "approved",
+      "status": "posted",
       "text": "",
-      "card_text": "领导说：“年轻人不要只盯着钱。”我听进去了。现在我只盯着下班时间。",
-      "image": "media/images/2026-10-22/p07.png"
+      "posted_at": "2026-10-22T10:40:20+08:00",
+      "card_text": "领导说：“年轻人不要只盯着钱。”我听进去了。现在我只盯着下班时间。"
     },
     {
       "id": "p08",
