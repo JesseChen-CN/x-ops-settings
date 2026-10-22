@@ -3,8 +3,9 @@
 (rules in reply_style.md), and send them with the X API, 20-40 s apart, max 30 per run, stopping at the first error.
 Started after every posting run (fast-reply.yml), so about every 5 minutes. Switch: data/config.json fast_replies_enabled.
 
-Finding comments: mentions plus a `to:me is:reply` search over the last 60 minutes on every run (the mentions timeline
-leaves some replies out or shows them late; X bills a re-read of the same post in a UTC day once). Keeps direct replies
+Finding comments: mentions plus a `to:me is:reply` search (the mentions timeline leaves some replies out or shows them
+late). To save read cost (Jesse 2026-10-22) each run reads only from state read_from: 10 minutes before the last run
+(search lag), or the oldest comment still left unanswered, never more than 60 minutes back. Keeps direct replies
 to me inside conversations started by my own posts, less than 24 h old, one reply per person per post (newest comment
 wins). A follow-up under one of my replies counts as a new comment. Skips comments already answered: by this script
 (state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only). Right before each send it
@@ -33,8 +34,13 @@ if not all(os.environ.get(k) for k in keys) or not (os.environ.get("ANTHROPIC_AP
 
 now = datetime.datetime.now(TZ)
 st = json.load(open(SF)) if os.path.exists(SF) else {}
+def utc(t): return t.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 def save_state():
     if dry: return
+    if "cands" in globals():   # next run starts 10 min before now, or at the oldest comment still unanswered
+        done = set(st.get("answered", [])) | set(st.get("replied", [])) | set(st.get("skipped", []))
+        left = [datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) for t in cands.values() if t["id"] not in done]
+        st["read_from"] = utc(min([now - datetime.timedelta(minutes=10)] + [x - datetime.timedelta(seconds=1) for x in left]))
     os.makedirs(os.path.dirname(SF), exist_ok=True)
     json.dump(st, open(SF, "w"), ensure_ascii=False, indent=2)
 if not st.get("uid"):
@@ -43,10 +49,12 @@ if not st.get("uid"):
     st["uid"], st["handle"] = js["data"]["id"], js["data"]["username"]
 uid, handle = st["uid"], st.get("handle", "jessechen1991")
 
-# 1. comments: mentions + search, last 60 minutes
+# 1. comments: mentions + search, from read_from (at most the last 60 minutes)
+start = now - datetime.timedelta(minutes=60)
+if st.get("read_from"): start = max(start, datetime.datetime.fromisoformat(st["read_from"].replace("Z", "+00:00")))
 p = {"max_results": "100", "tweet.fields": "created_at,conversation_id,in_reply_to_user_id,author_id,referenced_tweets",
      "expansions": "author_id,referenced_tweets.id", "user.fields": "username",
-     "start_time": (now - datetime.timedelta(minutes=60)).astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+     "start_time": utc(start)}
 tweets, users, refs = [], {}, {}
 def add(js):
     seen = {t["id"] for t in tweets}

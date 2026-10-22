@@ -31,7 +31,42 @@ def _auth_header(method, url, params=None):
     oauth["oauth_signature"] = base64.b64encode(hmac.new(key.encode(), base.encode(), hashlib.sha1).digest()).decode()
     return "OAuth " + ", ".join(f'{_q(k)}="{_q(v)}"' for k, v in sorted(oauth.items()))
 
+# Read counter (Jesse 2026-10-22, to see where post-read cost comes from): every GET adds the posts and users it
+# returned; at exit one line per process goes to reads-<Beijing date>.jsonl (project log, or the repo's data/fast_reply/reads).
+_reads = {}
+def _count(url, js):
+    if not isinstance(js, dict): return
+    data = js.get("data")
+    n = len(data) if isinstance(data, list) else (1 if isinstance(data, dict) else 0)
+    inc = js.get("includes", {})
+    path = urllib.parse.urlsplit(url).path
+    if "/users" in path and "/tweets" not in path and "/mentions" not in path: posts, users = len(inc.get("tweets", [])), n
+    else: posts, users = n + len(inc.get("tweets", [])), len(inc.get("users", []))
+    e = _reads.setdefault(path if "/2/users/" not in path else "/2/users/" + path.rsplit("/", 1)[-1], [0, 0, 0])
+    e[0] += 1; e[1] += posts; e[2] += users
+
+def _save_reads():
+    if not _reads: return
+    import datetime
+    bj = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
+    d = "/mnt/project-files/x-ops/log" if os.path.isdir("/mnt/project-files/x-ops/log") else \
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "fast_reply", "reads")
+    rec = {"at": bj.strftime("%Y-%m-%dT%H:%M:%S+08:00"), "script": os.path.basename(sys.argv[0]),
+           "posts": sum(v[1] for v in _reads.values()), "users": sum(v[2] for v in _reads.values()),
+           "calls": {k: {"n": v[0], "posts": v[1], "users": v[2]} for k, v in _reads.items()}}
+    print("x_api reads:", json.dumps(rec, ensure_ascii=False), file=sys.stderr)
+    try:
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, f"reads-{bj:%Y-%m-%d}.jsonl"), "a") as f: f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except OSError: pass
+import atexit; atexit.register(_save_reads)
+
 def _req(method, url, body=None, headers=None, sign_params=None):
+    code, js = _req_raw(method, url, body, headers, sign_params)
+    if method == "GET" and code < 300: _count(url, js)
+    return code, js
+
+def _req_raw(method, url, body=None, headers=None, sign_params=None):
     h = {"Authorization": _auth_header(method, url, sign_params)}
     h.update(headers or {})
     r = urllib.request.Request(url, data=body, headers=h, method=method)
