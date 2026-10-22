@@ -26,9 +26,6 @@ jobs:
         run: python3 scripts/x_api.py whoami
       - name: Post due queue items
         run: python3 scripts/post_due.py
-      - name: Send queued replies
-        if: always()
-        run: python3 scripts/send_replies.py
       - name: Save results
         if: always()
         run: |
