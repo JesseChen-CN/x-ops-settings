@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+"""Fast auto-replies: find new comments under @jessechen1991's own posts, have Claude write a reply in 陈不忧's voice
+(rules in reply_style.md), and send them with the X API, 20-40 s apart, max 30 per run, stopping at the first error.
+Started after every posting run (fast-reply.yml), so about every 5 minutes. Switch: data/config.json fast_replies_enabled.
+
+Finding comments: mentions plus a `to:me is:reply` search over the last 60 minutes on every run (the mentions timeline
+leaves some replies out or shows them late; X bills a re-read of the same post in a UTC day once). Keeps direct replies
+to me inside conversations started by my own posts, less than 24 h old, one reply per person per post (newest comment
+wins). A follow-up under one of my replies counts as a new comment. Skips comments already answered: by this script
+(state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam. Right before each send it
+also asks X whether I already replied to that comment.
+State: data/fast_reply/state.json. Log of sent replies: data/fast_reply/log/YYYY-MM-DD.jsonl.
+Claude: ANTHROPIC_API_KEY (Claude API) or CLAUDE_CODE_OAUTH_TOKEN (Claude Code on Jesse's subscription, `claude
+setup-token`). --dry-run writes the replies and prints them without sending or saving state."""
+import json, os, re, sys, glob, time, random, datetime, zoneinfo, subprocess, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import x_api
+
+TZ = zoneinfo.ZoneInfo("Asia/Shanghai")
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATA = os.path.join(HERE, "..", "data")
+SF = f"{DATA}/fast_reply/state.json"
+MAX = 30
+BANNED = ("回关", "必回", "互关", "浇水", "已关", "互助", "http", "#", "@")
+dry = "--dry-run" in sys.argv
+
+cfg = json.load(open(f"{DATA}/config.json"))
+if not cfg.get("fast_replies_enabled") and not dry:
+    print("fast replies disabled in data/config.json"); sys.exit(0)
+keys = ("X_API_KEY", "X_API_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOKEN_SECRET")
+if not all(os.environ.get(k) for k in keys) or not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")):
+    print("secrets missing (X keys, or ANTHROPIC_API_KEY / CLAUDE_CODE_OAUTH_TOKEN); nothing sent"); sys.exit(0)
+
+now = datetime.datetime.now(TZ)
+st = json.load(open(SF)) if os.path.exists(SF) else {}
+def save_state():
+    if dry: return
+    os.makedirs(os.path.dirname(SF), exist_ok=True)
+    json.dump(st, open(SF, "w"), ensure_ascii=False, indent=2)
+if not st.get("uid"):
+    code, js = x_api.whoami()
+    if code >= 300: sys.exit(f"whoami failed {code}: {js}")
+    st["uid"], st["handle"] = js["data"]["id"], js["data"]["username"]
+uid, handle = st["uid"], st.get("handle", "jessechen1991")
+
+# 1. comments: mentions + search, last 60 minutes
+p = {"max_results": "100", "tweet.fields": "created_at,conversation_id,in_reply_to_user_id,author_id,referenced_tweets",
+     "expansions": "author_id,referenced_tweets.id", "user.fields": "username",
+     "start_time": (now - datetime.timedelta(minutes=60)).astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+tweets, users, refs = [], {}, {}
+def add(js):
+    seen = {t["id"] for t in tweets}
+    tweets.extend(t for t in js.get("data", []) if t["id"] not in seen)
+    users.update({u["id"]: u["username"] for u in js.get("includes", {}).get("users", [])})
+    refs.update({t["id"]: t for t in js.get("includes", {}).get("tweets", [])})
+for _ in range(3):
+    code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/mentions?" + urllib.parse.urlencode(p))
+    if code >= 300: sys.exit(f"mentions failed {code}: {json.dumps(js, ensure_ascii=False)[:300]}")
+    add(js)
+    nt = js.get("meta", {}).get("next_token")
+    if not nt: break
+    p["pagination_token"] = nt
+p.pop("pagination_token", None)
+sp = dict(p, query=f"to:{handle} is:reply -from:{handle}")
+code, js = x_api._req("GET", f"{x_api.API}/2/tweets/search/recent?" + urllib.parse.urlencode(sp))
+if code >= 300: sys.exit(f"search failed {code}: {json.dumps(js, ensure_ascii=False)[:300]}")
+add(js)
+
+# 2. my own replies since the last run, so comments Jesse answered by hand are skipped
+mp = {"max_results": "100", "tweet.fields": "referenced_tweets"}
+if st.get("my_since"): mp["since_id"] = st["my_since"]
+else: mp["start_time"] = p["start_time"]
+code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/tweets?" + urllib.parse.urlencode(mp))
+if code >= 300: sys.exit(f"my tweets failed {code}: {json.dumps(js, ensure_ascii=False)[:300]}")
+answered = set(st.get("answered", []))
+for t in js.get("data", []):
+    st["my_since"] = str(max(int(st.get("my_since") or 0), int(t["id"])))
+    answered |= {r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"}
+st["answered"] = sorted(answered, key=int)[-2000:]
+
+# 3. keep new direct replies to me in conversations started by my own posts
+mine = set(st.get("my_posts", []))
+for rf in glob.glob(f"{DATA}/results/*.json"):
+    mine |= {r["tweet_id"] for r in json.load(open(rf)).values() if r.get("tweet_id")}
+for t in tweets:
+    if t.get("in_reply_to_user_id") == uid and t["conversation_id"] in {r["id"] for r in t.get("referenced_tweets", [])}:
+        mine.add(t["conversation_id"])
+st["my_posts"] = sorted(mine, key=int)[-500:]
+done = answered | set(st.get("replied", [])) | set(st.get("skipped", []))
+cut = now - datetime.timedelta(hours=24)
+cands = {}
+for t in tweets:
+    parent = next((r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"), None)
+    if t["author_id"] == uid or t.get("in_reply_to_user_id") != uid or not parent or t["id"] in done: continue
+    if t["conversation_id"] not in mine: continue
+    if datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) < cut: continue
+    key = (t["author_id"], parent)
+    old = cands.get(key)
+    if not old or int(t["id"]) > int(old["id"]): cands[key] = dict(t, parent=parent)
+todo = sorted(cands.values(), key=lambda t: int(t["id"]))[:MAX]   # the rest come back on the next run
+if not todo:
+    save_state(); print("no new comments"); sys.exit(0)
+
+# card posts have empty text; take the card's words from the queue
+cards = dict(st.get("cards", {}))
+for rf in glob.glob(f"{DATA}/results/*.json"):
+    qf = f"{DATA}/queue/{os.path.basename(rf)}"
+    if not os.path.exists(qf): continue
+    q = {x["id"]: x for x in json.load(open(qf))["posts"]}
+    for pid, r in json.load(open(rf)).items():
+        if r.get("tweet_id") and q.get(pid, {}).get("card_text"): cards[r["tweet_id"]] = q[pid]["card_text"]
+def clean(s):
+    s = " ".join(w for w in s.split() if not w.startswith("https://t.co/"))
+    return re.sub(r"^(@\w+\s*)+", "", s).strip()
+items = []
+for t in todo:
+    ptxt = clean(refs.get(t["parent"], {}).get("text", ""))
+    if t["parent"] in cards: ptxt = (ptxt + "\n[配图文字卡片] " + cards[t["parent"]]).strip()
+    items.append({"comment_id": t["id"], "commenter": users.get(t["author_id"], ""),
+                  "my_post": ptxt or "（只有图片，看不到内容）", "comment": clean(t["text"]) or "（只有图片或表情）"})
+
+# 4. Claude writes the replies
+recent = []
+for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-2:]:
+    recent += [json.loads(l)["text"] for l in open(f) if l.strip()]
+schema = {"type": "object", "additionalProperties": False, "required": ["replies"], "properties": {"replies": {
+    "type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["comment_id", "text"],
+                               "properties": {"comment_id": {"type": "string"}, "text": {"type": "string"}}}}}}
+msg = ("最近已发过的回复（不要重复）：\n" + "\n".join(recent[-60:]) +
+       "\n\n要回复的评论（my_post 是你被评论的那条帖子或回复）：\n" + json.dumps(items, ensure_ascii=False, indent=1) +
+       "\n\n每条评论给一条回复，comment_id 原样带回。")
+system = open(f"{HERE}/reply_style.md").read()
+if os.environ.get("ANTHROPIC_API_KEY"):
+    import anthropic
+    resp = anthropic.Anthropic().beta.messages.create(
+        model="claude-opus-5-5", max_tokens=16000,
+        betas=["server-side-fallback-2026-07-01"], fallbacks="default", system=system,
+        output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
+        messages=[{"role": "user", "content": msg}])
+    if resp.stop_reason != "end_turn":
+        sys.exit(f"Claude stopped with {resp.stop_reason}; nothing sent")
+    out = json.loads(next(b.text for b in resp.content if b.type == "text"))["replies"]
+else:   # Claude Code on the subscription, no tools, structured output
+    cp = subprocess.run(["claude", "-p", msg, "--model", "claude-opus-5-5", "--effort", "low", "--tools", "",
+                         "--no-session-persistence", "--system-prompt", system, "--output-format", "json",
+                         "--json-schema", json.dumps(schema)], capture_output=True, text=True, timeout=600)
+    try: res = json.loads(cp.stdout)
+    except ValueError: sys.exit(f"claude failed ({cp.returncode}): {(cp.stderr or cp.stdout)[:500]}")
+    if res.get("is_error") or not res.get("structured_output"):
+        sys.exit(f"claude returned no replies: {str(res.get('result'))[:300]}")
+    out = res["structured_output"]["replies"]
+
+by_id = {i["comment_id"]: i for i in items}
+seen, rows = set(recent), []
+for r in out:
+    text = r["text"].strip().rstrip("。")
+    if r["comment_id"] not in by_id: continue
+    if not text:   # spam, scams, abuse: never reply, never list again
+        st.setdefault("skipped", []).append(r["comment_id"]); by_id.pop(r["comment_id"]); continue
+    if text in seen or len(text) > 60 or any(b in text for b in BANNED): continue   # retried next run
+    seen.add(text)
+    rows.append(dict(by_id.pop(r["comment_id"]), text=text))
+if dry:
+    print(*[f"@{x['commenter']}：{x['comment'][:20]} → {x['text']}" for x in rows], sep="\n"); sys.exit(0)
+
+# 5. send, 20-40 s apart, stop at the first error
+os.makedirs(f"{DATA}/fast_reply/log", exist_ok=True)
+log = open(f"{DATA}/fast_reply/log/{now.date()}.jsonl", "a")
+sent = 0
+for x in rows:
+    q = {"query": f"from:{handle} is:reply in_reply_to_tweet_id:{x['comment_id']}", "max_results": "10"}
+    code, js = x_api._req("GET", f"{x_api.API}/2/tweets/search/recent?" + urllib.parse.urlencode(q))
+    if code < 300 and js.get("data"):
+        st["answered"].append(x["comment_id"]); continue
+    if sent: time.sleep(random.uniform(20, 40))
+    code, js = x_api.post(x["text"], reply_to=x["comment_id"])
+    if code >= 300:
+        save_state(); sys.exit(f"reply to {x['comment_id']} failed {code}: {json.dumps(js, ensure_ascii=False)[:300]}")
+    sent += 1
+    st.setdefault("replied", []).append(x["comment_id"])
+    st["replied"] = st["replied"][-3000:]
+    log.write(json.dumps({"at": datetime.datetime.now(TZ).isoformat(timespec="seconds"), "comment_id": x["comment_id"],
+                          "reply_id": js.get("data", {}).get("id"), "commenter": x["commenter"],
+                          "comment": x["comment"], "text": x["text"]}, ensure_ascii=False) + "\n")
+    log.flush(); save_state()
+    print(f"@{x['commenter']}：{x['comment'][:20]} → {x['text']}")
+save_state()
+print(f"sent {sent}")

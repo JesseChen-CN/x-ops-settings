@@ -5,7 +5,8 @@ Posting and auto-replies for @jessechen1991 (陈不忧) run here on GitHub Actio
 - `.github/workflows/post.yml` is started every 5 minutes from 07:00 to 23:59 Beijing time by cron-job.org (GitHub's own schedule is a backup).
 - `scripts/post_due.py` posts approved queue items that are due: at most 1 per run, and at least `min_gap_minutes` after the previous post.
 - `scripts/send_replies.py` sends queued replies to comments under @jessechen1991's own posts (20-40 s apart, max 30 per run, stops at the first error).
+- `.github/workflows/fast-reply.yml` runs right after every posting run: `scripts/fast_reply.py` finds new comments under @jessechen1991's own posts, has Claude write the replies (`scripts/reply_style.md`) and sends them (20-40 s apart, max 30 per run, never twice to one comment). State and a log of sent replies are in `data/fast_reply/`. Switch: `fast_replies_enabled`.
 - `data/queue/` and `data/replies/` are written by the project's `repo_sync.py`. `data/results/` and `data/reply_results/` are written only by Actions.
 - `data/config.json` has the on/off switches `posting_enabled` and `replies_enabled`.
 
-The X API keys live in this repo's Actions secrets: `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`.
+The X API keys live in this repo's Actions secrets: `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`. Claude for fast replies uses `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`, runs on the Claude subscription) or `ANTHROPIC_API_KEY`. Never put keys or tokens in repo files: this repo is public.
