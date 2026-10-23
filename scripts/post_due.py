@@ -46,14 +46,26 @@ for p in sorted(q["posts"], key=lambda x: x["time"]):
     if img and not os.path.exists(img): img = None
     if dry:
         print("would post", p["id"], p["time"], img); n += 1; continue
+    # News link (Jesse 2026-10-23: 明星八卦和社会新闻发帖时都需要带新闻链接). data/config.json news_link_mode:
+    # "reply" (default) posts the link as our own first reply right after the post, so the post keeps its reach and
+    # its 280-weight limit; "inline" appends it to the post text; "off" drops it.
+    link, mode = p.get("link"), cfg.get("news_link_mode", "reply")
+    text = p.get("text", "")
+    if link and mode == "inline": text = f"{text}\n{link}"
     try:
-        code, js = x_api.post(p.get("text", ""), img)
+        code, js = x_api.post(text, img)
     except Exception as e:
         code, js = 0, {"error": str(e)}
     if code and code < 300:
         r = {"status": "posted", "tweet_id": js["data"]["id"], "url": f"https://x.com/i/status/{js['data']['id']}",
              "posted_at": datetime.datetime.now(TZ).isoformat(timespec="seconds")}
         posted_today += p["id"] not in extra
+        if link and mode == "reply":
+            try:
+                c2, j2 = x_api.post(f"新闻原文：{link}", reply_to=js["data"]["id"])
+                r["link_reply"] = j2["data"]["id"] if c2 and c2 < 300 else f"error {c2} {json.dumps(j2, ensure_ascii=False)[:200]}"
+            except Exception as e:
+                r["link_reply"] = f"error {e}"
     else:
         r = {"status": "error", "error": f"{code} {json.dumps(js, ensure_ascii=False)[:500]}"}
     res[p["id"]] = r; n += 1
