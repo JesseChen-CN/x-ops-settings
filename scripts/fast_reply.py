@@ -12,12 +12,13 @@ wins). A follow-up under one of my replies counts as a new comment. Skips commen
 Someone who sends the same (or nearly the same) comment twice in a row under one of my posts is muted under that
 post (state muted "<person>:<post>"); their comments under other posts still get replies. Right before each send it
 also asks X whether I already replied to that comment.
+Each reply is written with the commenter's profile and our past exchanges (people.py, Jesse 2026-10-23).
 State: data/fast_reply/state.json. Log of sent replies: data/fast_reply/log/YYYY-MM-DD.jsonl.
 Claude: ANTHROPIC_API_KEY (Claude API) or CLAUDE_CODE_OAUTH_TOKEN (Claude Code on Jesse's subscription, `claude
 setup-token`). --dry-run writes the replies and prints them without sending or saving state."""
 import json, os, re, sys, glob, time, random, datetime, zoneinfo, subprocess, urllib.parse, difflib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import x_api
+import x_api, claude_call, people
 
 TZ = zoneinfo.ZoneInfo("Asia/Shanghai")
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -55,13 +56,14 @@ uid, handle = st["uid"], st.get("handle", "jessechen1991")
 start = now - datetime.timedelta(minutes=60)
 if st.get("read_from"): start = max(start, datetime.datetime.fromisoformat(st["read_from"].replace("Z", "+00:00")))
 p = {"max_results": "100", "tweet.fields": "created_at,conversation_id,in_reply_to_user_id,author_id,referenced_tweets",
-     "expansions": "author_id,referenced_tweets.id", "user.fields": "username",
+     "expansions": "author_id,referenced_tweets.id", "user.fields": "username,name",
      "start_time": utc(start)}
-tweets, users, refs = [], {}, {}
+tweets, users, names, refs = [], {}, {}, {}
 def add(js):
     seen = {t["id"] for t in tweets}
     tweets.extend(t for t in js.get("data", []) if t["id"] not in seen)
     users.update({u["id"]: u["username"] for u in js.get("includes", {}).get("users", [])})
+    names.update({u["id"]: u.get("name", "") for u in js.get("includes", {}).get("users", [])})
     refs.update({t["id"]: t for t in js.get("includes", {}).get("tweets", [])})
 for _ in range(3):
     code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/mentions?" + urllib.parse.urlencode(p))
@@ -128,6 +130,13 @@ for k in list(hist):   # keep 20 comments per person, 2000 people; log-based ent
     hist[k] = dict(sorted(hist[k].items(), key=lambda kv: int(kv[0]))[-20:])
 for k in sorted(hist, key=lambda k: max(map(int, hist[k])))[:-2000]: hist.pop(k)
 
+# every comment under my posts goes to the people log (user profiles, people.py), also the ones Jesse answered by hand
+if not dry:
+    people.log_comments([dict(t, username=users.get(t["author_id"], ""), name=names.get(t["author_id"], ""),
+                              on=" ".join(refs.get(r["id"], {}).get("text", "") for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"))
+                         for t in tweets if t["author_id"] != uid and t.get("in_reply_to_user_id") == uid and t["conversation_id"] in mine],
+                        st, now)
+
 cands = {}
 for t in tweets:
     parent = next((r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"), None)
@@ -161,6 +170,9 @@ for t in todo:
     if t["parent"] in cards: ptxt = (ptxt + "\n[配图文字卡片] " + cards[t["parent"]]).strip()
     items.append({"comment_id": t["id"], "commenter": users.get(t["author_id"], ""),
                   "post": t["conversation_id"], "my_post": ptxt or "（只有图片，看不到内容）", "comment": clean(t["text"]) or "（只有图片或表情）"})
+# Jesse 2026-10-23: reply according to who the person is and our relationship (profiles from people.py)
+ph = people.history()
+for i in items: i.update(people.context(i["commenter"], before=i["comment_id"], h=ph))
 
 # 4. Claude writes the replies
 recent = []
@@ -169,31 +181,13 @@ for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-2:]:
 schema = {"type": "object", "additionalProperties": False, "required": ["replies"], "properties": {"replies": {
     "type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["comment_id", "text"],
                                "properties": {"comment_id": {"type": "string"}, "text": {"type": "string"}}}}}}
-msg = ("最近已发过的回复（不要重复）：\n" + "\n".join(recent[-60:]) +
+ev = people.events_text()
+msg = (("中文圈最近的事（背景，评论提到了就接得上，用不上不硬塞）：\n" + ev + "\n\n" if ev else "") +
+       "最近已发过的回复（不要重复）：\n" + "\n".join(recent[-60:]) +
        "\n\n要回复的评论（my_post 是你被评论的那条帖子或回复）：\n" + json.dumps(items, ensure_ascii=False, indent=1) +
-       "\n\n每条评论给一条回复，comment_id 原样带回。")
+       "\n\n每条评论给一条回复，comment_id 原样带回。who 是这个人的画像和你们的关系，past 是你们以前的对话（旧的在前），按关系回。")
 system = open(f"{HERE}/reply_style.md").read()
-if os.environ.get("ANTHROPIC_API_KEY"):
-    import anthropic
-    resp = anthropic.Anthropic().beta.messages.create(
-        model="claude-opus-5-5", max_tokens=16000,
-        betas=["server-side-fallback-2026-07-01"], fallbacks="default", system=system,
-        output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
-        messages=[{"role": "user", "content": msg}])
-    if resp.stop_reason != "end_turn":
-        sys.exit(f"Claude stopped with {resp.stop_reason}; nothing sent")
-    out = json.loads(next(b.text for b in resp.content if b.type == "text"))["replies"]
-else:   # Claude Code on the subscription, no tools, structured output
-    # a token pasted from a wrapped terminal line can carry line breaks
-    env = dict(os.environ, CLAUDE_CODE_OAUTH_TOKEN="".join(os.environ["CLAUDE_CODE_OAUTH_TOKEN"].split()))
-    cp = subprocess.run(["claude", "-p", msg, "--model", "claude-opus-5-5", "--effort", "low", "--tools", "",
-                         "--no-session-persistence", "--system-prompt", system, "--output-format", "json",
-                         "--json-schema", json.dumps(schema)], capture_output=True, text=True, timeout=600, env=env)
-    try: res = json.loads(cp.stdout)
-    except ValueError: sys.exit(f"claude failed ({cp.returncode}): {(cp.stderr or cp.stdout)[:500]}")
-    if res.get("is_error") or not res.get("structured_output"):
-        sys.exit(f"claude returned no replies: {str(res.get('result'))[:300]}")
-    out = res["structured_output"]["replies"]
+out = claude_call.ask(system, msg, schema)["replies"]
 
 by_id = {i["comment_id"]: i for i in items}
 seen, rows = set(recent), []

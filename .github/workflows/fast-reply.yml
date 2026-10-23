@@ -1,5 +1,5 @@
 name: fast-reply
-# Replies to new comments under my own posts (scripts/fast_reply.py). Runs right after every posting run, which
+# Replies to new comments under my own posts (scripts/fast_reply.py), then refreshes user profiles (scripts/people.py). Runs right after every posting run, which
 # cron-job.org starts every 5 minutes, so there is no separate timer. Only one run at a time.
 on:
   workflow_run:
@@ -39,12 +39,17 @@ jobs:
       - name: Reply to new comments
         if: github.event_name == 'workflow_dispatch' || contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion)
         run: python3 scripts/fast_reply.py ${{ inputs.dry_run && '--dry-run' || '' }}
+      - name: Update user profiles
+        # profiles of the people who comment most + 中文圈大事记 (scripts/people.py), every people_every_hours
+        if: (github.event_name == 'workflow_dispatch' || contains(fromJSON('["success","failure"]'), github.event.workflow_run.conclusion)) && !inputs.dry_run
+        continue-on-error: true
+        run: python3 scripts/people.py build --if-due
       - name: Save state
         if: always() && !inputs.dry_run
         run: |
           git config user.name "x-ops bot"
           git config user.email "x-ops-bot@users.noreply.github.com"
-          git add data/fast_reply
+          git add data/fast_reply data/people
           git diff --cached --quiet && exit 0
           git commit -q -m "Record fast replies"
           for i in 1 2 3 4; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep $((i*5)); done
