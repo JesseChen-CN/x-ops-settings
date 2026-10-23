@@ -4,11 +4,11 @@
     {
       "id": "gm",
       "time": "07:53",
-      "status": "approved",
+      "status": "posted",
       "text": "早上好呀各位蓝朋友☕ 评论区签个到，看看今天谁比我还困 #蓝V交友",
+      "posted_at": "2026-10-23T07:55:17+08:00",
       "card_text": "工作日的早上，被窝和工资在拔河。被窝每天都赢，我每天都输。",
-      "extra": true,
-      "image": "media/images/2026-10-23/gm.png"
+      "extra": true
     },
     {
       "id": "p01",
@@ -213,6 +213,14 @@
       "status": "rejected",
       "text": "",
       "card_text": "深夜收到她的消息：“睡了吗？”你回“还没”，后面还有事；你回“睡了”，那你也确实只配睡觉。"
+    },
+    {
+      "id": "news-20261023-0811-10",
+      "time": "09:25",
+      "status": "approved",
+      "text": "iPhone Duo开售，微信还在“积极推进适配”。\n\n这就是我不买的原因。",
+      "extra": true,
+      "image": "media/images/2026-10-23/news-20261023-0811-10.jpg"
     }
   ]
 }
