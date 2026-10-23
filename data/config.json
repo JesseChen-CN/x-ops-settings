@@ -10,5 +10,8 @@
   "follow_daily_max": 110,
   "follow_min_gap_minutes": 4,
   "follow_start": 9,
-  "follow_end": 22
+  "follow_end": 22,
+  "people_top": 15,
+  "people_every_hours": 8,
+  "per_post_max": 2
 }
