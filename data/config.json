@@ -12,5 +12,6 @@
   "follow_start": 9,
   "follow_end": 22,
   "people_top": 15,
-  "people_every_hours": 8
+  "people_every_hours": 8,
+  "per_post_max": 2
 }

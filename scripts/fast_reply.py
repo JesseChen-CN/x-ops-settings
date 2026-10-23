@@ -10,7 +10,8 @@ to me inside conversations started by my own posts, less than 24 h old, one repl
 wins). A follow-up under one of my replies counts as a new comment. Skips comments already answered: by this script
 (state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only).
 Someone who sends the same (or nearly the same) comment twice in a row under one of my posts is muted under that
-post (state muted "<person>:<post>"); their comments under other posts still get replies. Right before each send it
+post (state muted "<person>:<post>"); their comments under other posts still get replies. At most 2 replies to one
+person under one post (config per_post_max). Right before each send it
 also asks X whether I already replied to that comment.
 Each reply is written with the commenter's profile and our past exchanges (people.py, Jesse 2026-10-23).
 State: data/fast_reply/state.json. Log of sent replies: data/fast_reply/log/YYYY-MM-DD.jsonl.
@@ -149,7 +150,20 @@ for t in tweets:
     key = (t["author_id"], parent)
     old = cands.get(key)
     if not old or int(t["id"]) > int(old["id"]): cands[key] = dict(t, parent=parent)
-todo = sorted(cands.values(), key=lambda t: int(t["id"]))[:MAX]   # the rest come back on the next run
+# Jesse 2026-10-23: at most per_post_max (2) replies to one person under one post, counted from the reply log;
+# comments past that are skipped for good, so read_from can move on
+cap, per = cfg.get("per_post_max", 2), {}
+for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-3:]:
+    for l in open(f):
+        r = json.loads(l) if l.strip() else {}
+        if r.get("post"): per[(r["commenter"].lower(), r["post"])] = per.get((r["commenter"].lower(), r["post"]), 0) + 1
+todo = []
+for t in sorted(cands.values(), key=lambda t: int(t["id"])):
+    k = (users.get(t["author_id"], "").lower(), t["conversation_id"])
+    if per.get(k, 0) >= cap:
+        st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; continue
+    per[k] = per.get(k, 0) + 1; todo.append(t)
+todo = todo[:MAX]   # the rest come back on the next run
 if not todo:
     save_state(); print("no new comments"); sys.exit(0)
 
