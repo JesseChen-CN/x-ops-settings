@@ -4,137 +4,155 @@
     {
       "id": "gm",
       "time": "07:52",
-      "status": "draft",
+      "status": "approved",
       "text": "早安蓝朋友们，昨晚说好早睡、结果又刷到半夜的来评论区报个到，今天一起靠咖啡续命 #蓝V交友",
       "card_text": "说好早睡早起，\n昨晚刷手机刷到两点。\n我的自律，只存在于立 flag 的那一秒。",
-      "extra": true
+      "extra": true,
+      "image": "media/images/2026-10-24/gm.png"
     },
     {
       "id": "p01",
       "time": "08:16",
-      "status": "draft",
+      "status": "approved",
       "text": "卧槽！！！！宝马离职补偿最高能拿65万欧，资本主义真能腐蚀人啊。4万人同时登录查自己能拿多少，系统都挤崩了。这要是搁我们这儿，大家早排队仲裁去了🐶",
-      "link": "https://tech.ifeng.com/c/8xOuKklJsJa"
+      "link": "https://tech.ifeng.com/c/8xOuKklJsJa",
+      "image": "media/memes/cache/920.png"
     },
     {
       "id": "p02",
       "time": "09:03",
-      "status": "draft",
-      "text": "滴滴：司机还有两分钟到达\n十分钟后\n滴滴：司机还有两分钟到达\n\n尼玛司机是从黑洞过来的吗？"
+      "status": "approved",
+      "text": "滴滴：司机还有两分钟到达\n十分钟后\n滴滴：司机还有两分钟到达\n\n尼玛司机是从黑洞过来的吗？",
+      "image": "media/memes/cache/2357.jpg"
     },
     {
       "id": "p03",
       "time": "09:51",
-      "status": "draft",
+      "status": "approved",
       "text": "卧槽！！！！小鹏开除3个人，就因为周末加班套了一顿十几二十块的餐补，还说是为了福利公平。\n\n周末白嫖员工的时间，公司一分钱不嫌多；员工多吃一顿二十块的饭，公司当场抓贼。\n\n这他妈到底谁在套取谁？",
-      "link": "https://finance.sina.com.cn/tech/discovery/2026-10-23/doc-iniwffen5100746.shtml"
+      "link": "https://finance.sina.com.cn/tech/discovery/2026-10-23/doc-iniwffen5100746.shtml",
+      "image": "media/memes/cache/2607.jpg"
     },
     {
       "id": "p04",
       "time": "10:37",
-      "status": "draft",
-      "text": "离了个大谱！！！外卖备注“多放辣”，送来一点不辣；备注“不要辣”，辣得我差点报警。商家你他妈是照着备注做菜，还是照着反着来做菜？"
+      "status": "approved",
+      "text": "离了个大谱！！！外卖备注“多放辣”，送来一点不辣；备注“不要辣”，辣得我差点报警。商家你他妈是照着备注做菜，还是照着反着来做菜？",
+      "image": "media/memes/cache/2660.jpg"
     },
     {
       "id": "p05",
       "time": "11:24",
-      "status": "draft",
+      "status": "approved",
       "text": "好家伙！！！同样是买港股赚的钱：走港股通，资本利得暂免个税；走境外券商，按20%交，往前追三年，还他妈带滞纳金。赚的是同一份钱，就因为没走指定那扇门，你就成了偷税的。这哪是收税，这是收过路费。",
-      "link": "https://www.cls.cn/detail/2091536"
+      "link": "https://www.cls.cn/detail/2091536",
+      "image": "media/memes/cache/1735.jpg"
     },
     {
       "id": "p06",
       "time": "12:12",
-      "status": "draft",
-      "text": "公司给每个工位发了盆绿萝，说能净化空气。三个月死了一半，HR说是我们不会养。放屁！！！它们天天跟我们一起熬到十点，能活下来一半都算命硬。死掉的那些不是没养好，是他妈比我们先学会了离职。"
+      "status": "approved",
+      "text": "公司给每个工位发了盆绿萝，说能净化空气。三个月死了一半，HR说是我们不会养。放屁！！！它们天天跟我们一起熬到十点，能活下来一半都算命硬。死掉的那些不是没养好，是他妈比我们先学会了离职。",
+      "image": "media/memes/cache/3322.jpg"
     },
     {
       "id": "p07",
       "time": "12:58",
-      "status": "draft",
-      "text": "笑死！！！Meta因为隐私误导用户被罚250亿美元，按每次违规5000美元算。原来我的隐私明码标价，一条5000刀。卖的时候没分我一分钱，罚的时候也他妈没我的份。合着我就是那个被卖了还帮着数钱的。",
-      "link": "https://www.aljazeera.com/news/2026/10/21/judge-orders-meta-to-pay-25bn-in-fines-for-facebook-privacy-violations"
+      "status": "approved",
+      "text": "卧槽！！！！Meta 因为隐私误导用户被罚 250 亿美元，按每次违规 5000 美元算。我的隐私原来明码标价，一条 5000 刀。卖的时候白嫖我的，罚的时候钱也他妈没我的份。这他妈到底是在罚 Meta，还是在跟我们分赃？🐶",
+      "link": "https://www.aljazeera.com/news/2026/10/21/judge-orders-meta-to-pay-25bn-in-fines-for-facebook-privacy-violations",
+      "image": "media/images/2026-10-24/p07.jpg"
     },
     {
       "id": "p08",
       "time": "13:44",
-      "status": "draft",
-      "text": "周报写了三个小时，活一共才干了两个小时。剩下那一小时，在琢磨怎么把两小时吹成五天。这破周报到底是给老板看工作的，还是他妈逼我练写小说的？"
+      "status": "approved",
+      "text": "周报写了三个小时，活一共才干了两个小时。剩下那一小时，在琢磨怎么把两小时吹成五天。这破周报到底是给老板看工作的，还是他妈逼我练写小说的？",
+      "image": "media/memes/cache/3499.jpg"
     },
     {
       "id": "p09",
       "time": "14:33",
-      "status": "draft",
-      "text": "我真是服了！！！企业出海，有专门的对外投资规定一路保驾护航；我想换点美元，一年5万封顶，还得先交代用途。同样是钱往外走，公司走叫“走出去”，老百姓走叫“资金外流”。门是给有钱人开的，我们他妈只配看门。"
+      "status": "approved",
+      "text": "我真是服了！！！企业出海，有专门的对外投资规定一路保驾护航；我想换点美元，一年5万封顶，还得先交代用途。同样是钱往外走，公司走叫“走出去”，老百姓走叫“资金外流”。门是给有钱人开的，我们他妈只配看门。",
+      "image": "media/memes/cache/133.jpeg"
     },
     {
       "id": "p10",
       "time": "15:19",
-      "status": "draft",
+      "status": "approved",
       "text": "家人们谁懂啊！！！山姆开心果涨到99.9一袋，每30天限购两袋，黄牛一袋还要再加二三十。买个坚果搞得跟抢茅台似的，这他妈到底叫开心果，还是叫闹心果？",
-      "link": "https://m.thepaper.cn/newsDetail_forward_34267278"
+      "link": "https://m.thepaper.cn/newsDetail_forward_34267278",
+      "image": "media/memes/cache/1141.jpg"
     },
     {
       "id": "p11",
       "time": "16:06",
-      "status": "draft",
-      "text": "家族群里，我爸转发《这种食物千万别吃，致癌》，我妈回“收到”，二姨也转了。三分钟后，二姨在朋友圈晒了一桌子这玩意儿。你们他妈转发到底是为了提醒别人，还是为了提醒自己今晚吃啥？"
+      "status": "approved",
+      "text": "卧槽！！！！养生公众号：「这5种食物千万别吃」\n养生公众号：「这5种食物每天必吃」\n养生公众号：「震惊！你吃错了十年」\n同一个号，同一周，同一批人转发。这他妈到底是养生，还是在拿我们的胃做AB测试？",
+      "image": "media/memes/cache/1787.jpg"
     },
     {
       "id": "p12",
       "time": "16:52",
-      "status": "draft",
-      "text": "发改委把养老机构分成三类：兜底的、普惠的、市场的，各定各的价。有病吧，还用分吗？退休金早他妈替我们分好了：有人退休进普惠，有人退休进市场，有人退休了还在工地搬砖，自己给自己兜底。",
-      "link": "https://www.news.cn/politics/20261016/7ba84e2734a64a0799cf5e9a0078d8b0/c.html"
+      "status": "approved",
+      "text": "卧槽！！！！发改委说养老机构分兜底、普惠、市场三类，各定各的价。白嫖了一辈子社保缴费的人，老了还得先查自己够哪档，这他妈是养老还是开盲盒？",
+      "link": "https://www.news.cn/politics/20261016/7ba84e2734a64a0799cf5e9a0078d8b0/c.html",
+      "image": "media/memes/cache/1091.jpg"
     },
     {
       "id": "p13",
       "time": "17:41",
-      "status": "draft",
-      "text": "公司说年假随时可以请。我请了，领导说行，先把手上的事交接好。我交接了一周，交接完一看日历：年底了。这他妈不叫年假，叫挂在年底的大饼，看得见，吃不着。"
+      "status": "approved",
+      "text": "卧槽！！！！公司群里发通知：「请大家合理安排下班时间，拒绝无效加班」。五分钟后领导：「方案今晚发我，辛苦」。白嫖我的晚上还要我给他点赞，这他妈到底谁在无效？",
+      "image": "media/memes/cache/1708.jpg"
     },
     {
       "id": "p14",
       "time": "18:27",
-      "status": "draft",
-      "text": "深圳11月起全市全天禁鸣喇叭，按一次罚300，一年第三次起罚500，一管五年。行，车不让叫了，堵在路上的人总能骂两句吧？卧槽，可别哪天骂人也按分贝收钱。",
-      "link": "https://www.21jingji.com/article/20261022/herald/09c33c86a7454b4d65926f2f9103ebb7.html"
+      "status": "approved",
+      "text": "卧槽！！！！深圳11月起全市全天禁鸣喇叭，按一次罚300，一年第三次起罚500，一管五年。红灯变绿前面发呆的不罚，后面提醒一下的要罚，尼玛这是保护发呆的人吗？这他妈到底谁在妨碍交通？",
+      "link": "https://www.21jingji.com/article/20261022/herald/09c33c86a7454b4d65926f2f9103ebb7.html",
+      "image": "media/memes/cache/3569.jpg"
     },
     {
       "id": "p15",
       "time": "19:14",
-      "status": "draft",
-      "text": "房东说：朝南、采光好、交通便利。住进去才知道：朝南，对着隔壁的墙；采光，靠楼道的灯；交通便利，楼下就是公交站，凌晨五点第一班车准时把我喊醒。房东你他妈不去写广告真是屈才了。"
+      "status": "approved",
+      "text": "房东说：朝南、采光好、交通便利。住进去才知道：朝南，对着隔壁的墙；采光，靠楼道的灯；交通便利，楼下就是公交站，凌晨五点第一班车准时把我喊醒。房东你他妈不去写广告真是屈才了。",
+      "image": "media/memes/cache/2767.jpg"
     },
     {
       "id": "p16",
       "time": "20:02",
-      "status": "draft",
+      "status": "rejected",
       "text": "想请问一下，电梯坏了要用我们自己交的维修基金来修，那每年交的物业费到底是交来干嘛的？"
     },
     {
       "id": "p17",
       "time": "21:07",
-      "status": "draft",
-      "text": "不懂就问：为什么医院的号提前一周都抢不到，号贩子手里却总是有？"
+      "status": "approved",
+      "text": "不懂就问：为什么医院的号提前一周都抢不到，号贩子手里却总是有？",
+      "image": "media/memes/cache/2306.jpg"
     },
     {
       "id": "p18",
       "time": "21:53",
-      "status": "draft",
+      "status": "rejected",
       "text": "真心请教：放假之前要先调休补班，这不就是把我自己的周末挪了个地方，再叫我放假吗？"
     },
     {
       "id": "p19",
       "time": "22:42",
-      "status": "draft",
+      "status": "rejected",
       "text": "请问一下，为什么房子还没盖好，房贷就要先开始还？"
     },
     {
       "id": "p20",
       "time": "23:28",
-      "status": "draft",
-      "text": "交友软件上签名写“只交朋友，不约”的，凌晨两点回消息最快。这他妈哪是不约，是白天不约。"
+      "status": "approved",
+      "text": "交友软件上签名写“只交朋友，不约”的，凌晨两点回消息最快。这他妈哪是不约，是白天不约。",
+      "image": "media/memes/cache/3279.jpg"
     }
   ]
 }
