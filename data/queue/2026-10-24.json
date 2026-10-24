@@ -4,11 +4,11 @@
     {
       "id": "gm",
       "time": "07:52",
-      "status": "approved",
+      "status": "posted",
       "text": "早安蓝朋友们，昨晚说好早睡、结果又刷到半夜的来评论区报个到，今天一起靠咖啡续命 #蓝V交友",
+      "posted_at": "2026-10-24T07:55:17+08:00",
       "card_text": "说好早睡早起，\n昨晚刷手机刷到两点。\n我的自律，只存在于立 flag 的那一秒。",
-      "extra": true,
-      "image": "media/images/2026-10-24/gm.png"
+      "extra": true
     },
     {
       "id": "p01",
