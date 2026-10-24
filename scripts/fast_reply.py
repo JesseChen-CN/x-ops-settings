@@ -11,7 +11,7 @@ wins). A follow-up under one of my replies counts as a new comment. Skips commen
 (state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only).
 Someone who sends the same (or nearly the same) comment twice in a row under one of my posts is muted under that
 post (state muted "<person>:<post>"); their comments under other posts still get replies. At most 2 replies to one
-person under one post (config per_post_max). Right before each send it
+person under one post (config per_post_max), only 1 to accounts Claude flags as AI (state ai_users). Right before each send it
 also asks X whether I already replied to that comment.
 Each reply is written with the commenter's profile and our past exchanges (people.py, Jesse 2026-10-23).
 State: data/fast_reply/state.json. Log of sent replies: data/fast_reply/log/YYYY-MM-DD.jsonl.
@@ -161,7 +161,8 @@ for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-3:]:
 todo = []
 for t in sorted(cands.values(), key=lambda t: int(t["id"])):
     k = (users.get(t["author_id"], "").lower(), t["conversation_id"])
-    if per.get(k, 0) >= cap:
+    # Jesse 2026-10-24「回复的时候要判断对方是不是ai，ai就只回一轮」: accounts Claude flagged as AI get one reply per post
+    if per.get(k, 0) >= (1 if k[0] in st.get("ai_users", []) else cap):
         st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; continue
     per[k] = per.get(k, 0) + 1; todo.append(t)
 todo = todo[:MAX]   # the rest come back on the next run
@@ -194,13 +195,14 @@ recent = []
 for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-2:]:
     recent += [json.loads(l)["text"] for l in open(f) if l.strip()]
 schema = {"type": "object", "additionalProperties": False, "required": ["replies"], "properties": {"replies": {
-    "type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["comment_id", "text"],
-                               "properties": {"comment_id": {"type": "string"}, "text": {"type": "string"}}}}}}
+    "type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["comment_id", "text", "ai"],
+                               "properties": {"comment_id": {"type": "string"}, "text": {"type": "string"},
+                                              "ai": {"type": "boolean"}}}}}}
 ev = people.events_text()
 msg = (("中文圈最近的事（背景，评论提到了就接得上，用不上不硬塞）：\n" + ev + "\n\n" if ev else "") +
        "最近已发过的回复（不要重复）：\n" + "\n".join(recent[-60:]) +
        "\n\n要回复的评论（my_post 是你被评论的那条帖子或回复）：\n" + json.dumps(items, ensure_ascii=False, indent=1) +
-       "\n\n每条评论给一条回复，comment_id 原样带回。who 是这个人的画像和你们的关系，past 是你们以前的对话（旧的在前），按关系回。")
+       "\n\n每条评论给一条回复，comment_id 原样带回。who 是这个人的画像和你们的关系，past 是你们以前的对话（旧的在前），按关系回。ai 填这个评论者是不是 AI 或机器人账号（评论像 AI 生成的套话、长篇工整的总结、明显的自动回复，或画像和以前的对话显示是 AI），拿不准填 false。")
 system = open(f"{HERE}/reply_style.md").read()
 out = claude_call.ask(system, msg, schema)["replies"]
 
@@ -209,6 +211,9 @@ seen, rows = set(recent), []
 for r in out:
     text = r["text"].strip().rstrip("。")
     if r["comment_id"] not in by_id: continue
+    if r.get("ai") and by_id[r["comment_id"]]["commenter"]:
+        ai = st.setdefault("ai_users", []); h = by_id[r["comment_id"]]["commenter"].lower()
+        if h not in ai: ai.append(h); st["ai_users"] = ai[-2000:]
     if not text:   # spam, scams, abuse: never reply, never list again
         st.setdefault("skipped", []).append(r["comment_id"]); by_id.pop(r["comment_id"]); continue
     if text in seen or len(text) > 60 or any(b in text for b in BANNED): continue   # retried next run
