@@ -51,17 +51,17 @@
     {
       "id": "p06",
       "time": "12:12",
-      "status": "approved",
+      "status": "posted",
       "text": "公司给每个工位发了盆绿萝，说能净化空气。三个月死了一半，HR说是我们不会养。放屁！！！它们天天跟我们一起熬到十点，能活下来一半都算命硬。死掉的那些不是没养好，是他妈比我们先学会了离职。",
-      "image": "media/memes/cache/3322.jpg"
+      "posted_at": "2026-10-24T12:15:23+08:00"
     },
     {
       "id": "p07",
       "time": "12:58",
-      "status": "approved",
+      "status": "posted",
       "text": "卧槽！！！！Meta 因为隐私误导用户被罚 250 亿美元，按每次违规 5000 美元算。我的隐私原来明码标价，一条 5000 刀。卖的时候白嫖我的，罚的时候钱也他妈没我的份。这他妈到底是在罚 Meta，还是在跟我们分赃？🐶",
-      "link": "https://www.aljazeera.com/news/2026/10/21/judge-orders-meta-to-pay-25bn-in-fines-for-facebook-privacy-violations",
-      "image": "media/images/2026-10-24/p07.jpg"
+      "posted_at": "2026-10-24T13:00:34+08:00",
+      "link": "https://www.aljazeera.com/news/2026/10/21/judge-orders-meta-to-pay-25bn-in-fines-for-facebook-privacy-violations"
     },
     {
       "id": "p08",
