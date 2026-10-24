@@ -88,23 +88,13 @@ for pid, pv in list(pending.items()):
         tweets.append(pv["t"]); users[pv["t"]["author_id"]] = pv["u"]; refs.update(pv["refs"])
 
 # 2. my own replies since the last run, so comments Jesse answered by hand are skipped
-mp = {"max_results": "100", "tweet.fields": "referenced_tweets"}
+mp = {"max_results": "100", "tweet.fields": "referenced_tweets,conversation_id"}
 if st.get("my_since"): mp["since_id"] = st["my_since"]
 else: mp["start_time"] = p["start_time"]
 code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/tweets?" + urllib.parse.urlencode(mp))
+myjs = js
 if code >= 300: sys.exit(f"my tweets failed {code}: {json.dumps(js, ensure_ascii=False)[:300]}")
 answered = set(st.get("answered", []))
-# Jesse 2026-10-24「不仅要不像ai，还要像我」: replies Jesse typed himself (not sent by this script) are kept as
-# style examples for Claude, newest 40
-bot_ids = set()
-for lf in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-3:]:
-    bot_ids |= {json.loads(l).get("reply_id") for l in open(lf) if l.strip()}
-voice = st.setdefault("my_voice", [])
-for t in sorted(js.get("data", []), key=lambda t: int(t["id"])):
-    if t["id"] not in bot_ids and any(r["type"] == "replied_to" for r in t.get("referenced_tweets", [])):
-        txt = re.sub(r"^(@\w+\s*)+|https://t\.co/\S+", "", t.get("text", "")).strip()
-        if txt and txt not in voice: voice.append(txt)
-st["my_voice"] = voice[-40:]
 for t in js.get("data", []):
     st["my_since"] = str(max(int(st.get("my_since") or 0), int(t["id"])))
     answered |= {r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"}
@@ -118,6 +108,19 @@ for t in tweets:
     if t.get("in_reply_to_user_id") == uid and t["conversation_id"] in {r["id"] for r in t.get("referenced_tweets", [])}:
         mine.add(t["conversation_id"])
 st["my_posts"] = sorted(mine, key=int)[-500:]
+# Jesse 2026-10-24「不仅要不像ai，还要像我」: replies Jesse typed himself (not sent by this script) are kept as
+# style examples for Claude, newest 40. Only replies under my own posts: replies under other people's posts are
+# mostly radar drafts Claude wrote and Jesse pasted (Jesse 2026-10-24「你需要读我自己回的，不要读你生成的那些」).
+bot_ids = set()
+for lf in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-3:]:
+    bot_ids |= {json.loads(l).get("reply_id") for l in open(lf) if l.strip()}
+if st.get("my_voice_v") != 2: st["my_voice"], st["my_voice_v"] = [], 2   # drop examples collected before this filter
+voice = st.setdefault("my_voice", [])
+for t in sorted(myjs.get("data", []), key=lambda t: int(t["id"])):
+    if t["id"] not in bot_ids and t.get("conversation_id") in mine and any(r["type"] == "replied_to" for r in t.get("referenced_tweets", [])):
+        txt = re.sub(r"^(@\w+\s*)+|https://t\.co/\S+", "", t.get("text", "")).strip()
+        if txt and txt not in voice: voice.append(txt)
+st["my_voice"] = voice[-40:]
 done = answered | set(st.get("replied", [])) | set(st.get("skipped", []))
 cut = now - datetime.timedelta(hours=24)
 
