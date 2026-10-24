@@ -153,6 +153,15 @@
       "status": "approved",
       "text": "交友软件上签名写“只交朋友，不约”的，凌晨两点回消息最快。这他妈哪是不约，是白天不约。",
       "image": "media/memes/cache/3279.jpg"
+    },
+    {
+      "id": "news-20261024-2011-4",
+      "time": "22:07",
+      "status": "approved",
+      "text": "薄肌肉虽好，但不要贪杯哦",
+      "link": "https://k.sina.cn/article_5953466437_v162dab0450670bfvdq.html",
+      "extra": true,
+      "image": "media/images/2026-10-24/news-20261024-2011-4.jpg"
     }
   ]
 }
