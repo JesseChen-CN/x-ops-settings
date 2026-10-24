@@ -69,5 +69,11 @@
     "url": "https://x.com/i/status/2113893339015631064",
     "posted_at": "2026-10-24T15:20:21+08:00",
     "link_reply": "error 400 {\"detail\": \"One or more parameters to your request was invalid.\", \"errors\": [{\"message\": \"The Tweet contains an invalid URL.\", \"parameters\": {\"text\": [\"新闻原文：https://m.thepaper.cn/newsDetail_forward_34"
+  },
+  "p11": {
+    "status": "posted",
+    "tweet_id": "2113905923441746407",
+    "url": "https://x.com/i/status/2113905923441746407",
+    "posted_at": "2026-10-24T16:10:21+08:00"
   }
 }
