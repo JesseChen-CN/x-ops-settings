@@ -75,5 +75,12 @@
     "tweet_id": "2113905923441746407",
     "url": "https://x.com/i/status/2113905923441746407",
     "posted_at": "2026-10-24T16:10:21+08:00"
+  },
+  "p12": {
+    "status": "posted",
+    "tweet_id": "2113917233642553824",
+    "url": "https://x.com/i/status/2113917233642553824",
+    "posted_at": "2026-10-24T16:55:18+08:00",
+    "link_reply": "error 400 {\"detail\": \"One or more parameters to your request was invalid.\", \"errors\": [{\"message\": \"The Tweet contains an invalid URL.\", \"parameters\": {\"text\": [\"新闻原文：https://www.news.cn/politics/20261016/7ba84"
   }
 }
