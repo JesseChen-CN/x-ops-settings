@@ -145,6 +145,7 @@ for t in tweets:
     if t["conversation_id"] not in mine: continue
     if f"{t['author_id']}:{t['conversation_id']}" in muted:   # never list again, so read_from can move on
         st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; done.add(t["id"]); continue
+    if users.get(t["author_id"], "").lower() in ("grok", "grokai"): continue   # Jesse 2026-10-24: never reply to Grok
     if not re.search(r"[\u4e00-\u9fff]", t["text"]): continue   # Jesse 2026-10-22: only reply to comments with Chinese in them
     if datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) < cut: continue
     key = (t["author_id"], parent)
