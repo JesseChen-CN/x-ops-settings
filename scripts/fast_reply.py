@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Fast auto-replies: find new comments under @jessechen1991's own posts, have Claude write a reply in 陈不忧's voice
-(rules in reply_style.md), and send them with the X API, 20-40 s apart, max 30 per run, stopping at the first error.
+(rules in reply_style.md), and send them with the X API, 20-40 s apart, max 5 per run, stopping at the first error.
+No replies 01:00-07:00 Beijing; each comment waits a random 5-40 min; ~30% of very short comments are skipped.
 Started after every posting run (fast-reply.yml), so about every 5 minutes. Switch: data/config.json fast_replies_enabled.
 
 Finding comments: mentions plus a `to:me is:reply` search (the mentions timeline leaves some replies out or shows them
 late). To save read cost (Jesse 2026-10-22) each run reads only from state read_from: 10 minutes before the last run
-(search lag), or the oldest comment still left unanswered, never more than 60 minutes back. Keeps direct replies
+(search lag), or the oldest comment still left unanswered, never more than 7 hours back. Keeps direct replies
 to me inside conversations started by my own posts, less than 24 h old, one reply per person per post (newest comment
 wins). A follow-up under one of my replies counts as a new comment. Skips comments already answered: by this script
 (state replied), by Jesse by hand (my own tweets, read incrementally), or skipped as spam, and comments with no Chinese characters (English-only, emoji-only).
@@ -25,7 +26,7 @@ TZ = zoneinfo.ZoneInfo("Asia/Shanghai")
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "..", "data")
 SF = f"{DATA}/fast_reply/state.json"
-MAX = 30
+MAX = 5   # Jesse 2026-10-24: at most 5 per run, so replies don't come out in a burst
 BANNED = ("回关", "必回", "互关", "浇水", "已关", "互助", "http", "#", "@")
 dry = "--dry-run" in sys.argv
 
@@ -37,13 +38,15 @@ if not all(os.environ.get(k) for k in keys) or not (os.environ.get("ANTHROPIC_AP
     print("secrets missing (X keys, or ANTHROPIC_API_KEY / CLAUDE_CODE_OAUTH_TOKEN); nothing sent"); sys.exit(0)
 
 now = datetime.datetime.now(TZ)
+if 1 <= now.hour < 7 and not dry:   # Jesse 2026-10-24: a real person sleeps; night comments wait for the morning
+    print("quiet hours 01-07 Beijing, nothing sent"); sys.exit(0)
 st = json.load(open(SF)) if os.path.exists(SF) else {}
 def utc(t): return t.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 def save_state():
     if dry: return
     if "cands" in globals():   # next run starts 10 min before now, or at the oldest comment still unanswered
         done = set(st.get("answered", [])) | set(st.get("replied", [])) | set(st.get("skipped", []))
-        left = [datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) for t in cands.values() if t["id"] not in done]
+        left = [datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) for t in cands.values() if t["id"] not in done and t["id"] not in st.get("pending", {})]
         st["read_from"] = utc(min([now - datetime.timedelta(minutes=10)] + [x - datetime.timedelta(seconds=1) for x in left]))
     os.makedirs(os.path.dirname(SF), exist_ok=True)
     json.dump(st, open(SF, "w"), ensure_ascii=False, indent=2)
@@ -54,7 +57,7 @@ if not st.get("uid"):
 uid, handle = st["uid"], st.get("handle", "jessechen1991")
 
 # 1. comments: mentions + search, from read_from (at most the last 60 minutes)
-start = now - datetime.timedelta(minutes=60)
+start = now - datetime.timedelta(hours=7)   # 7 h so the first morning run still sees the night's comments
 if st.get("read_from"): start = max(start, datetime.datetime.fromisoformat(st["read_from"].replace("Z", "+00:00")))
 p = {"max_results": "100", "tweet.fields": "created_at,conversation_id,in_reply_to_user_id,author_id,referenced_tweets",
      "expansions": "author_id,referenced_tweets.id", "user.fields": "username,name",
@@ -78,6 +81,11 @@ sp = dict(p, query=f"to:{handle} is:reply -from:{handle}")
 code, js = x_api._req("GET", f"{x_api.API}/2/tweets/search/recent?" + urllib.parse.urlencode(sp))
 if code >= 300: sys.exit(f"search failed {code}: {json.dumps(js, ensure_ascii=False)[:300]}")
 add(js)
+# comments held back by the random delay (Jesse 2026-10-24) are kept in state, so read_from can move on
+pending = st.setdefault("pending", {})
+for pid, pv in list(pending.items()):
+    if pid not in {t["id"] for t in tweets}:
+        tweets.append(pv["t"]); users[pv["t"]["author_id"]] = pv["u"]; refs.update(pv["refs"])
 
 # 2. my own replies since the last run, so comments Jesse answered by hand are skipped
 mp = {"max_results": "100", "tweet.fields": "referenced_tweets"}
@@ -86,6 +94,17 @@ else: mp["start_time"] = p["start_time"]
 code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/tweets?" + urllib.parse.urlencode(mp))
 if code >= 300: sys.exit(f"my tweets failed {code}: {json.dumps(js, ensure_ascii=False)[:300]}")
 answered = set(st.get("answered", []))
+# Jesse 2026-10-24「不仅要不像ai，还要像我」: replies Jesse typed himself (not sent by this script) are kept as
+# style examples for Claude, newest 40
+bot_ids = set()
+for lf in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-3:]:
+    bot_ids |= {json.loads(l).get("reply_id") for l in open(lf) if l.strip()}
+voice = st.setdefault("my_voice", [])
+for t in sorted(js.get("data", []), key=lambda t: int(t["id"])):
+    if t["id"] not in bot_ids and any(r["type"] == "replied_to" for r in t.get("referenced_tweets", [])):
+        txt = re.sub(r"^(@\w+\s*)+|https://t\.co/\S+", "", t.get("text", "")).strip()
+        if txt and txt not in voice: voice.append(txt)
+st["my_voice"] = voice[-40:]
 for t in js.get("data", []):
     st["my_since"] = str(max(int(st.get("my_since") or 0), int(t["id"])))
     answered |= {r["id"] for r in t.get("referenced_tweets", []) if r["type"] == "replied_to"}
@@ -160,11 +179,23 @@ for f in sorted(glob.glob(f"{DATA}/fast_reply/log/*.jsonl"))[-3:]:
         if r.get("post"): per[(r["commenter"].lower(), r["post"])] = per.get((r["commenter"].lower(), r["post"]), 0) + 1
 todo = []
 for t in sorted(cands.values(), key=lambda t: int(t["id"])):
+    # Jesse 2026-10-24 (look less like a bot): each comment waits a random 5-40 minutes before it gets a reply (it
+    # stays unanswered, so read_from holds it), and about 30% of very short comments (6 characters or less) are
+    # skipped for good. Both are fixed per comment id, so every run decides the same way.
+    n = int(t["id"])
+    if datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")) + datetime.timedelta(minutes=5 + n * 2654435761 % 36) > now:
+        pending[t["id"]] = {"t": {k: v for k, v in t.items() if k != "parent"}, "u": users.get(t["author_id"], ""),
+                            "refs": {r["id"]: refs[r["id"]] for r in t.get("referenced_tweets", []) if r["id"] in refs}}
+        continue
+    pending.pop(t["id"], None)
+    if len(re.sub(r"^(@\w+\s*)+|https://t\.co/\S+|\s", "", t["text"])) <= 6 and n // 7 % 100 < 30:
+        st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; continue
     k = (users.get(t["author_id"], "").lower(), t["conversation_id"])
     # Jesse 2026-10-24「回复的时候要判断对方是不是ai，ai就只回一轮」: accounts Claude flagged as AI get one reply per post
     if per.get(k, 0) >= (1 if k[0] in st.get("ai_users", []) else cap):
         st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; continue
     per[k] = per.get(k, 0) + 1; todo.append(t)
+for pid in [i for i, v in pending.items() if i in done or i not in {t["id"] for t in cands.values()}]: pending.pop(pid, None)
 todo = todo[:MAX]   # the rest come back on the next run
 if not todo:
     save_state(); print("no new comments"); sys.exit(0)
@@ -199,7 +230,9 @@ schema = {"type": "object", "additionalProperties": False, "required": ["replies
                                "properties": {"comment_id": {"type": "string"}, "text": {"type": "string"},
                                               "ai": {"type": "boolean"}}}}}}
 ev = people.events_text()
-msg = (("中文圈最近的事（背景，评论提到了就接得上，用不上不硬塞）：\n" + ev + "\n\n" if ev else "") +
+mv = st.get("my_voice", [])
+msg = (("陈不忧本人（Jesse）最近亲手回的评论，口吻、长短、用词照这个来，回得像他本人：\n" + "\n".join(mv[-30:]) + "\n\n" if mv else "") +
+       ("中文圈最近的事（背景，评论提到了就接得上，用不上不硬塞）：\n" + ev + "\n\n" if ev else "") +
        "最近已发过的回复（不要重复）：\n" + "\n".join(recent[-60:]) +
        "\n\n要回复的评论（my_post 是你被评论的那条帖子或回复）：\n" + json.dumps(items, ensure_ascii=False, indent=1) +
        "\n\n每条评论给一条回复，comment_id 原样带回。who 是这个人的画像和你们的关系，past 是你们以前的对话（旧的在前），按关系回。ai 填这个评论者是不是 AI 或机器人账号（评论像 AI 生成的套话、长篇工整的总结、明显的自动回复，或画像和以前的对话显示是 AI），拿不准填 false。")
@@ -216,7 +249,7 @@ for r in out:
         if h not in ai: ai.append(h); st["ai_users"] = ai[-2000:]
     if not text:   # spam, scams, abuse: never reply, never list again
         st.setdefault("skipped", []).append(r["comment_id"]); by_id.pop(r["comment_id"]); continue
-    if text in seen or len(text) > 60 or any(b in text for b in BANNED): continue   # retried next run
+    if (text in seen and len(text) > 5) or len(text) > 60 or any(b in text for b in BANNED): continue   # retried next run
     seen.add(text)
     rows.append(dict(by_id.pop(r["comment_id"]), text=text))
 if dry:
