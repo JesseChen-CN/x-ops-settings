@@ -1,17 +1,18 @@
 {
   "posting_enabled": true,
   "replies_enabled": false,
-  "daily_limit": 20,
+  "daily_limit": 8,
   "note": "Switches for GitHub Actions posting. repo_sync.py copies daily_limit from the project config; the two switches are flipped only at switch-over.",
-  "min_gap_minutes": 15,
+  "min_gap_minutes": 60,
   "fast_replies_enabled": true,
   "follow_enabled": true,
-  "follow_daily_min": 85,
-  "follow_daily_max": 110,
-  "follow_min_gap_minutes": 4,
+  "follow_daily_min": 25,
+  "follow_daily_max": 35,
+  "follow_min_gap_minutes": 15,
   "follow_start": 9,
   "follow_end": 22,
   "people_top": 15,
   "people_every_hours": 8,
-  "per_post_max": 2
+  "per_post_max": 2,
+  "follow_min_values": 2
 }

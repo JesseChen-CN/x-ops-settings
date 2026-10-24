@@ -51,7 +51,10 @@ todo, seen = [], set(done)
 for d in range(3):
     cf = f"{F}/candidates/{now - datetime.timedelta(days=d):%Y-%m-%d}.json"
     for c in json.load(open(cf)) if os.path.exists(cf) else []:
-        if c["id"] not in seen: seen.add(c["id"]); todo.append(c)
+        if c["id"] in seen: continue
+        seen.add(c["id"])
+        # like-minded only (Jesse 2026-10-24 trial): values score from follow_check.py, >= follow_min_values
+        if c.get("values", 0) >= cfg.get("follow_min_values", 0): todo.append(c)
 if not todo:
     print("no candidates left"); sys.exit(0)
 c = todo[0]
