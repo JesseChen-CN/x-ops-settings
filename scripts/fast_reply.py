@@ -88,7 +88,7 @@ for pid, pv in list(pending.items()):
         tweets.append(pv["t"]); users[pv["t"]["author_id"]] = pv["u"]; refs.update(pv["refs"])
 
 # 2. my own replies since the last run, so comments Jesse answered by hand are skipped
-mp = {"max_results": "100", "tweet.fields": "referenced_tweets,conversation_id"}
+mp = {"max_results": "100", "tweet.fields": "referenced_tweets,conversation_id,in_reply_to_user_id"}
 if st.get("my_since"): mp["since_id"] = st["my_since"]
 else: mp["start_time"] = p["start_time"]
 code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/tweets?" + urllib.parse.urlencode(mp))
@@ -121,6 +121,14 @@ for t in sorted(myjs.get("data", []), key=lambda t: int(t["id"])):
         txt = re.sub(r"^(@\w+\s*)+|https://t\.co/\S+", "", t.get("text", "")).strip()
         if txt and txt not in voice: voice.append(txt)
 st["my_voice"] = voice[-40:]
+# Jesse 2026-10-24「那些有我自己触发的回复，不需要你帮我自动回复」: once Jesse replied to someone by hand under a post,
+# that person's comments under that post are his to answer (state hand "<person id>:<post>")
+hand = st.setdefault("hand", [])
+for t in myjs.get("data", []):
+    if t["id"] not in bot_ids and t.get("in_reply_to_user_id") and t["in_reply_to_user_id"] != uid:
+        k = f"{t['in_reply_to_user_id']}:{t['conversation_id']}"
+        if k not in hand: hand.append(k)
+st["hand"] = hand[-3000:]
 done = answered | set(st.get("replied", [])) | set(st.get("skipped", []))
 cut = now - datetime.timedelta(hours=24)
 
@@ -166,6 +174,8 @@ for t in tweets:
     if t["author_id"] == uid or t.get("in_reply_to_user_id") != uid or not parent or t["id"] in done: continue
     if t["conversation_id"] not in mine: continue
     if f"{t['author_id']}:{t['conversation_id']}" in muted:   # never list again, so read_from can move on
+        st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; done.add(t["id"]); continue
+    if f"{t['author_id']}:{t['conversation_id']}" in hand:   # Jesse is talking with this person here himself
         st.setdefault("skipped", []).append(t["id"]); st["skipped"] = st["skipped"][-3000:]; done.add(t["id"]); continue
     if users.get(t["author_id"], "").lower() in ("grok", "grokai"): continue   # Jesse 2026-10-24: never reply to Grok
     if not re.search(r"[\u4e00-\u9fff]", t["text"]): continue   # Jesse 2026-10-22: only reply to comments with Chinese in them
