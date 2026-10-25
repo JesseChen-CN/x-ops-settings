@@ -4,30 +4,34 @@
     {
       "id": "gm",
       "time": "07:53",
-      "status": "draft",
+      "status": "approved",
       "text": "早啊蓝朋友们，周一了，醒着的来评论区报个到。 #蓝V交友",
       "card_text": "周一早上，\n闹钟响了三遍，\n我说了三次再五分钟。\n它没急，我先急了。",
-      "extra": true
+      "extra": true,
+      "image": "media/images/2026-10-26/gm.png"
     },
     {
       "id": "p01",
       "time": "12:23",
-      "status": "draft",
+      "status": "approved",
       "text": "影石程序员节又发黄金键帽了，今年是空格键和F5，一颗空格键快4万。\n我现在一大半代码是Claude写的，真轮到我领，估计只配领那颗F5：专门负责刷新，看它写完没有😂",
-      "link": "https://finance.sina.com.cn/tech/roll/2026-10-24/doc-iniwhtfu4961960.shtml"
+      "link": "https://finance.sina.com.cn/tech/roll/2026-10-24/doc-iniwhtfu4961960.shtml",
+      "image": "media/memes/cache/1303.jpg"
     },
     {
       "id": "p02",
       "time": "18:37",
-      "status": "draft",
+      "status": "approved",
       "text": "国常会说要优化面向家庭的财税、社保、住房支持，稳住新出生人口。\n上学看学区房，落户看房，结婚先问有没有房，一辈子的资源全绑在一套房子上。年轻人不生，不是不懂事，是算得太明白了。所谓躺平，其实就是一种非暴力不合作。",
-      "link": "https://www.nbd.com.cn/articles/2026-10-23/4615180.html"
+      "link": "https://www.nbd.com.cn/articles/2026-10-23/4615180.html",
+      "image": "media/memes/cache/2730.jpg"
     },
     {
       "id": "p03",
       "time": "21:14",
-      "status": "draft",
-      "text": "不懂就问：幼儿园按规定不能教拼音，可不少家长说一年级老师默认孩子都会了。那这些孩子的拼音，到底是在哪学的？"
+      "status": "approved",
+      "text": "不懂就问：幼儿园按规定不能教拼音，可不少家长说一年级老师默认孩子都会了。那这些孩子的拼音，到底是在哪学的？",
+      "image": "media/memes/cache/393.jpg"
     }
   ]
 }
