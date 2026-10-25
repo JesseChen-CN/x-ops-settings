@@ -68,11 +68,11 @@
     {
       "id": "news-20261024-1211-2",
       "time": "08:52",
-      "status": "approved",
+      "status": "posted",
       "text": "三电系统被加密，配件找不到，第三方也修不了。车是你买的，钱是你付的，结果连修的权利都没有。85万辆孤儿车，新规一句没提，这他妈叫保障还是叫送葬？",
+      "posted_at": "2026-10-25T09:00:37+08:00",
       "link": "https://cbgc.scol.com.cn/news/8084873",
-      "extra": true,
-      "image": "media/images/2026-10-25/news-20261024-1211-2.jpg"
+      "extra": true
     },
     {
       "id": "news-20261024-1211-7",
