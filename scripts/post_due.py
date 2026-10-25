@@ -5,7 +5,7 @@ Image paths in the queue are relative to data/. Results go to data/results/YYYY-
 (id -> status, tweet_id, url, posted_at | error), which only this script writes, so it never
 conflicts with repo_sync.py pushing queue edits at the same time. At most --max items per run (default 2), so a
 backlog after downtime goes out spread over several runs instead of all at once."""
-import json, os, sys, datetime, zoneinfo
+import json, os, re, sys, datetime, zoneinfo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import x_api
 
@@ -33,11 +33,38 @@ times = [r["posted_at"] for r in res.values() if r.get("posted_at")] + [p["poste
 last = max((datetime.datetime.fromisoformat(t) for t in times), default=None)
 if last and now - last < datetime.timedelta(minutes=cfg.get("min_gap_minutes", 15)):
     print("last post at", last.isoformat(timespec="minutes"), "- waiting for the gap"); sys.exit(0)
+# Browser posting (Jesse 2026-10-25「以后自动发帖也由浏览器来干」): his Chrome posts due items first. This script is the
+# fallback when his computer is off: it leaves an item alone until it is browser_grace_minutes overdue, and before posting
+# checks his recent tweets so an item the browser already posted is recorded instead of posted twice.
+browser = cfg.get("browser_posting", False)
+grace = datetime.timedelta(minutes=cfg.get("browser_grace_minutes", 30))
+_recent = None
+def _norm(t):
+    return re.sub(r"https?://\S+|\s+", "", t or "")[:40]
+def browser_posted(p):
+    """The tweet the browser posted for this item, if any, matched on the first 40 non-space characters."""
+    global _recent
+    if _recent is None:
+        uid = x_api.whoami()[1].get("data", {}).get("id")
+        code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/tweets?max_results=20&exclude=replies,retweets&tweet.fields=created_at") if uid else (0, {})
+        _recent = js.get("data", []) if code and code < 300 else []
+    k = _norm(p.get("text"))
+    return next((t for t in _recent if k and _norm(t.get("text")) == k), None)
 n = 0
 for p in sorted(q["posts"], key=lambda x: x["time"]):
     if p.get("status") != "approved" or p["id"] in res: continue
     t = datetime.datetime.fromisoformat(f"{q['date']}T{p['time']}").replace(tzinfo=TZ)
     if t > now: continue
+    if browser and not dry:
+        if now - t < grace: continue  # the browser gets the first go
+        bt = browser_posted(p)
+        if bt:
+            res[p["id"]] = {"status": "posted", "by": "browser", "tweet_id": bt["id"], "url": f"https://x.com/i/status/{bt['id']}",
+                            "posted_at": bt.get("created_at") or now.isoformat(timespec="seconds")}
+            posted_today += p["id"] not in extra
+            print(p["id"], "already posted by the browser", res[p["id"]]["url"])
+            os.makedirs(os.path.dirname(rf), exist_ok=True); json.dump(res, open(rf, "w"), ensure_ascii=False, indent=2)
+            continue
     if p["id"] not in extra and posted_today >= cfg.get("daily_limit", 30):
         print("daily limit reached for", p["id"]); continue  # extras later in the day still go out
     if n >= maxn:
