@@ -40,10 +40,10 @@
     {
       "id": "p03",
       "time": "12:14",
-      "status": "approved",
+      "status": "posted",
       "text": "一个公众号，粉丝几百万，一夜之间“因违规被禁止关注”。违了啥一个字不提，只告诉你：没了。别人是先审判后定罪，这儿是先蒸发后通知。这他妈到底是在治理违规，还是在教大家学会闭嘴？",
-      "link": "http://k.sina.com.cn/article_5953740931_162dee0830670431qg.html",
-      "image": "media/memes/cache/2775.jpg"
+      "posted_at": "2026-10-25T12:15:22+08:00",
+      "link": "http://k.sina.com.cn/article_5953740931_162dee0830670431qg.html"
     },
     {
       "id": "p05",
@@ -82,6 +82,14 @@
       "posted_at": "2026-10-25T10:05:17+08:00",
       "link": "https://www.thepaper.cn/newsDetail_forward_34311665",
       "extra": true
+    },
+    {
+      "id": "adhoc-20261025-jiaoyou",
+      "time": "13:39",
+      "status": "approved",
+      "text": "找同类。\n万青那两张专辑是华语第一和第二，这条你同意，咱们就能接着聊声音碎片、杨德昌、王小波和《郭源潮》了。\n不同意也行，评论区说说你心里的第一。\n#蓝V交友",
+      "extra": true,
+      "image": "media/images/2026-10-25/adhoc-20261025-jiaoyou.jpg"
     }
   ]
 }
