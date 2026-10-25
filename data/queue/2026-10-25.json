@@ -77,11 +77,11 @@
     {
       "id": "news-20261024-1211-7",
       "time": "09:52",
-      "status": "approved",
+      "status": "posted",
       "text": "“读博期间不上临床”，履历却写“参与四级手术”，学校一出面又成了“表达不当”。论文是真的，轮转是真的，就“盲猜”是节目效果呗？尼玛病人是来给你们凑节目的吗？",
+      "posted_at": "2026-10-25T10:05:17+08:00",
       "link": "https://www.thepaper.cn/newsDetail_forward_34311665",
-      "extra": true,
-      "image": "media/images/2026-10-25/news-20261024-1211-7.jpg"
+      "extra": true
     }
   ]
 }
