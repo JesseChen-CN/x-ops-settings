@@ -11,12 +11,40 @@
       "image": "media/images/2026-10-26/gm.png"
     },
     {
+      "id": "p04",
+      "time": "09:17",
+      "status": "approved",
+      "text": "在大陆想用 Claude，要翻两道墙：自家的墙不让你出去，人家的墙不给你进来。中美难得在一件事上达成了共识🤣",
+      "image": "media/memes/cache/2416.jpg"
+    },
+    {
+      "id": "p05",
+      "time": "10:48",
+      "status": "approved",
+      "text": "网传深圳要开 APEC，最近在严查翻墙，不少人说梯子已经用不了。每次开大会梯子都先感冒，比天气预报还准。🤣",
+      "image": "media/memes/cache/2782.jpg"
+    },
+    {
       "id": "p01",
       "time": "12:23",
       "status": "approved",
       "text": "影石程序员节又发黄金键帽了，今年是空格键和F5，一颗空格键快4万。\n我现在一大半代码是Claude写的，真轮到我领，估计只配领那颗F5：专门负责刷新，看它写完没有😂",
       "link": "https://finance.sina.com.cn/tech/roll/2026-10-24/doc-iniwhtfu4961960.shtml",
       "image": "media/memes/cache/1303.jpg"
+    },
+    {
+      "id": "p06",
+      "time": "14:07",
+      "status": "approved",
+      "text": "口袋里的电池叫隐患，车底下的电池叫国之重器。",
+      "image": "media/memes/cache/707.jpg"
+    },
+    {
+      "id": "p07",
+      "time": "16:03",
+      "status": "approved",
+      "text": "网传印度用 AI 让已故精神领袖“复活”，跟总理对话。咱这边大概是不敢这么玩的，复活出来的话得先过审，不然一开口就完犊子了😂",
+      "image": "media/memes/cache/1261.jpg"
     },
     {
       "id": "p02",
@@ -32,6 +60,13 @@
       "status": "approved",
       "text": "不懂就问：幼儿园按规定不能教拼音，可不少家长说一年级老师默认孩子都会了。那这些孩子的拼音，到底是在哪学的？",
       "image": "media/memes/cache/393.jpg"
+    },
+    {
+      "id": "p08",
+      "time": "22:26",
+      "status": "approved",
+      "text": "有人说西游要是拍成那段暗黑 CG 就去电影院五刷。我倒想问一句：游戏和 CG 都做得出来，电影为什么拍不出来？？",
+      "image": "media/memes/cache/1422.jpg"
     }
   ]
 }
