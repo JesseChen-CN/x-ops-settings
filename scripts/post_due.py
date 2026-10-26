@@ -39,6 +39,18 @@ if last and now - last < datetime.timedelta(minutes=cfg.get("min_gap_minutes", 1
 browser = cfg.get("browser_posting", False)
 grace = datetime.timedelta(minutes=cfg.get("browser_grace_minutes", 30))
 _recent = None
+# Time placeholders (Jesse 2026-10-26「把这种随环境变化的日期值写成动态变量，发送时自动填入」): drafts keep {今天} {星期}
+# {明天} {明天星期} {时段} {问候}; they are filled with Beijing time at the moment of posting (the browser does the same).
+def fill(t, at=None):
+    at = at or datetime.datetime.now(TZ)
+    nx = at + datetime.timedelta(days=1)
+    wd = "一二三四五六日"
+    h = at.hour
+    part = "早上" if 5 <= h < 11 else "中午" if h < 13 else "下午" if h < 18 else "晚上" if h < 24 and h >= 18 else "凌晨"
+    greet = {"早上": "早上好", "中午": "中午好", "下午": "下午好", "晚上": "晚上好", "凌晨": "夜猫子们好"}[part]
+    vals = {"今天": f"{at.month}月{at.day}日", "星期": "周" + wd[at.weekday()], "明天": f"{nx.month}月{nx.day}日",
+            "明天星期": "周" + wd[nx.weekday()], "时段": part, "问候": greet}
+    return re.sub(r"\{(今天|星期|明天星期|明天|时段|问候)\}", lambda m: vals[m.group(1)], t or "")
 def _norm(t):
     return re.sub(r"https?://\S+|\s+", "", t or "")[:40]
 def browser_posted(p):
@@ -48,8 +60,11 @@ def browser_posted(p):
         uid = x_api.whoami()[1].get("data", {}).get("id")
         code, js = x_api._req("GET", f"{x_api.API}/2/users/{uid}/tweets?max_results=20&exclude=replies,retweets&tweet.fields=created_at") if uid else (0, {})
         _recent = js.get("data", []) if code and code < 300 else []
-    k = _norm(p.get("text"))
-    return next((t for t in _recent if k and _norm(t.get("text")) == k), None)
+    # placeholders were filled at the browser's send time, so fill them with each tweet's own time before comparing
+    def at(t):
+        try: return datetime.datetime.fromisoformat(t["created_at"].replace("Z", "+00:00")).astimezone(TZ)
+        except Exception: return None
+    return next((t for t in _recent if _norm(fill(p.get("text"), at(t))) and _norm(fill(p.get("text"), at(t))) == _norm(t.get("text"))), None)
 n = 0
 for p in sorted(q["posts"], key=lambda x: x["time"]):
     if p.get("status") != "approved" or p["id"] in res: continue
@@ -77,7 +92,7 @@ for p in sorted(q["posts"], key=lambda x: x["time"]):
     # "reply" (default) posts the link as our own first reply right after the post, so the post keeps its reach and
     # its 280-weight limit; "inline" appends it to the post text; "off" drops it.
     link, mode = p.get("link"), cfg.get("news_link_mode", "reply")
-    text = p.get("text", "")
+    text = fill(p.get("text", ""))
     if link and mode == "inline": text = f"{text}\n{link}"
     try:
         code, js = x_api.post(text, img)
