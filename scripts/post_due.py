@@ -108,6 +108,13 @@ for p in sorted(q["posts"], key=lambda x: x["time"]):
                 r["link_reply"] = j2["data"]["id"] if c2 and c2 < 300 else f"error {c2} {json.dumps(j2, ensure_ascii=False)[:200]}"
             except Exception as e:
                 r["link_reply"] = f"error {e}"
+        # 长文 (Jesse 2026-10-26): the sources go out as our own first reply (first_reply), not as links in the post
+        if p.get("first_reply"):
+            try:
+                c3, j3 = x_api.post(p["first_reply"], reply_to=js["data"]["id"])
+                r["first_reply"] = j3["data"]["id"] if c3 and c3 < 300 else f"error {c3} {json.dumps(j3, ensure_ascii=False)[:200]}"
+            except Exception as e:
+                r["first_reply"] = f"error {e}"
     else:
         r = {"status": "error", "error": f"{code} {json.dumps(js, ensure_ascii=False)[:500]}"}
     res[p["id"]] = r; n += 1
