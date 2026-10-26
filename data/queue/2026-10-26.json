@@ -97,10 +97,10 @@
     {
       "id": "2026-10-26-tesla-doubao",
       "time": "15:05",
-      "status": "approved",
+      "status": "posted",
       "text": "停在地库摄像头好好的，非要我去擦灰。国区车机接了豆包之后，连一本正经胡说八道都学会了😂 @elonmusk",
-      "extra": true,
-      "image": "media/images/2026-10-26/2026-10-26-tesla-doubao.jpg"
+      "posted_at": "2026-10-26T07:12:29.000Z",
+      "extra": true
     }
   ]
 }
