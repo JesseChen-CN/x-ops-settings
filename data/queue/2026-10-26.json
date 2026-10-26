@@ -80,10 +80,10 @@
     {
       "id": "radar-20261025-1620-r5",
       "time": "19:37",
-      "status": "approved",
+      "status": "posted",
       "text": "产品经理说「这个很简单」。\n一句话的事，三个大模型跑到天亮也没跑明白他想要什么。",
-      "extra": true,
-      "image": "media/images/2026-10-26/radar-20261025-1620-r5.jpg"
+      "posted_at": "2026-10-26T20:10:25+08:00",
+      "extra": true
     },
     {
       "id": "news-20261025-2043-1",
