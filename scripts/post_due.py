@@ -46,7 +46,7 @@ def fill(t, at=None):
     nx = at + datetime.timedelta(days=1)
     wd = "一二三四五六日"
     h = at.hour
-    part = "早上" if 5 <= h < 11 else "中午" if h < 13 else "下午" if h < 18 else "晚上" if h < 24 and h >= 18 else "凌晨"
+    part = "凌晨" if h < 5 else "早上" if h < 11 else "中午" if h < 13 else "下午" if h < 18 else "晚上"
     greet = {"早上": "早上好", "中午": "中午好", "下午": "下午好", "晚上": "晚上好", "凌晨": "夜猫子们好"}[part]
     vals = {"今天": f"{at.month}月{at.day}日", "星期": "周" + wd[at.weekday()], "明天": f"{nx.month}月{nx.day}日",
             "明天星期": "周" + wd[nx.weekday()], "时段": part, "问候": greet}
