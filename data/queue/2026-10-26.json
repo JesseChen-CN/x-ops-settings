@@ -27,10 +27,10 @@
     {
       "id": "p01",
       "time": "12:23",
-      "status": "approved",
+      "status": "posted",
       "text": "影石程序员节又发黄金键帽了，今年是空格键和F5，一颗空格键快4万。\n我现在一大半代码是Claude写的，真轮到我领，估计只配领那颗F5：专门负责刷新，看它写完没有😂",
-      "link": "https://finance.sina.com.cn/tech/roll/2026-10-24/doc-iniwhtfu4961960.shtml",
-      "image": "media/memes/cache/1303.jpg"
+      "posted_at": "2026-10-26T04:29:43.000Z",
+      "link": "https://finance.sina.com.cn/tech/roll/2026-10-24/doc-iniwhtfu4961960.shtml"
     },
     {
       "id": "p06",
