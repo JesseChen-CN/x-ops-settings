@@ -4,11 +4,11 @@
     {
       "id": "gm",
       "time": "07:53",
-      "status": "approved",
+      "status": "posted",
       "text": "早啊蓝朋友们，周一了，醒着的来评论区报个到。 #蓝V交友",
+      "posted_at": "2026-10-25T23:54:59.000Z",
       "card_text": "周一早上，\n闹钟响了三遍，\n我说了三次再五分钟。\n它没急，我先急了。",
-      "extra": true,
-      "image": "media/images/2026-10-26/gm.png"
+      "extra": true
     },
     {
       "id": "p04",
