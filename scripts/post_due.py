@@ -73,8 +73,10 @@ def browser_posted(p):
 n = 0
 for p in sorted(q["posts"], key=lambda x: x["time"]):
     if p.get("status") != "approved" or p["id"] in res: continue
-    t = datetime.datetime.fromisoformat(f"{q['date']}T{p['time']}").replace(tzinfo=TZ)
-    if t > now: continue
+    # No posting times since 2026-10-27 (Jesse「每10分钟从今日审核挑第一条」): only the item next_post.py released
+    # (release_at) may go out; `time` is just its place in the review page's order.
+    if not p.get("release_at"): continue
+    t = datetime.datetime.fromisoformat(p["release_at"])
     if browser and not dry:
         if now - t < grace: continue  # the browser gets the first go
         bt = browser_posted(p)

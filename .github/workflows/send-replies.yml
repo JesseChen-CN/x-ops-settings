@@ -1,10 +1,8 @@
 name: send-replies
 # Sends queued replies as soon as a Claude session pushes them (repo_sync.py reply / reply-batch).
 # Pushes made by this workflow's own token do not start new runs, so recording results does not loop.
+# Automatic trigger removed 2026-10-27 (Jesse: posts and replies only through the browser); start by hand only.
 on:
-  push:
-    branches: [main]
-    paths: ["data/replies/**"]
   workflow_dispatch:
 concurrency:
   group: replies

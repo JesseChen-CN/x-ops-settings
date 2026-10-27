@@ -1,10 +1,8 @@
 name: fast-reply
 # Replies to new comments under my own posts (scripts/fast_reply.py), then refreshes user profiles (scripts/people.py). Runs right after every posting run, which
 # cron-job.org starts every 5 minutes, so there is no separate timer. Only one run at a time.
+# Automatic trigger removed 2026-10-27 (Jesse: posts and replies only through the browser); start by hand only.
 on:
-  workflow_run:
-    workflows: [post]
-    types: [completed]
   workflow_dispatch:
     inputs:
       dry_run:
