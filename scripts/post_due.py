@@ -31,7 +31,12 @@ posted_today = sum(1 for k, r in res.items() if r["status"] == "posted" and k no
 # Gap (Jesse 2026-10-22): at least min_gap_minutes between two posts, counting posts made from the project too
 times = [r["posted_at"] for r in res.values() if r.get("posted_at")] + [p["posted_at"] for p in q["posts"] if p.get("posted_at")]
 last = max((datetime.datetime.fromisoformat(t) for t in times), default=None)
-if last and now - last < datetime.timedelta(minutes=cfg.get("min_gap_minutes", 15)):
+# Peak hours use a shorter gap (Jesse 2026-10-27「以后发帖间隔在流量高峰期也可以缩短」): config peak_hours / peak_gap_minutes
+def _in_peak(t):
+    m = t.hour * 60 + t.minute
+    return any(int(a[:2]) * 60 + int(a[3:]) <= m < int(b[:2]) * 60 + int(b[3:]) for a, b in cfg.get("peak_hours", []))
+gap_min = cfg.get("peak_gap_minutes", cfg.get("min_gap_minutes", 15)) if _in_peak(now) else cfg.get("min_gap_minutes", 15)
+if last and now - last < datetime.timedelta(minutes=gap_min):
     print("last post at", last.isoformat(timespec="minutes"), "- waiting for the gap"); sys.exit(0)
 # Browser posting (Jesse 2026-10-25「以后自动发帖也由浏览器来干」): his Chrome posts due items first. This script is the
 # fallback when his computer is off: it leaves an item alone until it is browser_grace_minutes overdue, and before posting

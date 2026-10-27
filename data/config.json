@@ -16,5 +16,20 @@
   "people_top": 15,
   "people_every_hours": 8,
   "per_post_max": 2,
-  "follow_min_values": 2
+  "follow_min_values": 2,
+  "peak_gap_minutes": 30,
+  "peak_hours": [
+    [
+      "12:00",
+      "14:00"
+    ],
+    [
+      "15:00",
+      "17:00"
+    ],
+    [
+      "20:00",
+      "23:00"
+    ]
+  ]
 }
