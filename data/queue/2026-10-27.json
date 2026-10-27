@@ -95,10 +95,10 @@
     {
       "id": "radar-20261026-1120-r1",
       "time": "11:51",
-      "status": "approved",
+      "status": "posted",
       "text": "网传X要上长按点赞打赏1美元。老马终于把X做成微信了，只是先学了收钱这部分。",
-      "extra": true,
-      "image": "media/images/2026-10-27/radar-20261026-1120-r1.jpg"
+      "posted_at": "2026-10-27T12:35:18+08:00",
+      "extra": true
     },
     {
       "id": "news-20261026-0842-3",
@@ -121,10 +121,10 @@
     {
       "id": "news-20261026-1018-r2",
       "time": "12:21",
-      "status": "approved",
+      "status": "posted",
       "text": "网传简中区开通创作者收益的一共304个号。几千万人翻墙出来，最后能领老马低保的，比考公上岸的还少。",
-      "extra": true,
-      "image": "media/images/2026-10-27/news-20261026-1018-r2.jpg"
+      "posted_at": "2026-10-27T04:32:10Z",
+      "extra": true
     },
     {
       "id": "news-20261026-1244-2",
@@ -182,10 +182,19 @@
     {
       "id": "adhoc-20261027-de-gruss",
       "time": "11:40",
-      "status": "approved",
+      "status": "posted",
       "text": "Hallo liebe Deutsche 👋 Kurze Frage: Landet man bei euch wirklich im Knast, wenn man den Hitlergruß zeigt? Stimmt das?",
+      "posted_at": "2026-10-27T04:01:22.000Z",
+      "extra": true
+    },
+    {
+      "id": "2026-10-27-mbappe-de",
+      "time": "23:37",
+      "status": "approved",
+      "text": "德国朋友们，请教个问题：\n姆巴佩说网上最好笑的梗图，是把他的脸P到「一个中国独裁者」身上，很多中国人破防了。\n假如他说希特勒是独裁者，你们会破防吗？",
+      "link": "https://www.malaymail.com/news/sports/2026/10/27/mbappe-dropped-by-two-chinese-brands-over-video-referencing-mao-zedong/240758",
       "extra": true,
-      "image": "media/images/2026-10-27/adhoc-20261027-de-gruss.jpg"
+      "image": "media/images/2026-10-27/2026-10-27-mbappe-de.jpg"
     }
   ]
 }
