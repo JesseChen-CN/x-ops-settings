@@ -1,10 +1,10 @@
 {
-  "posting_enabled": true,
+  "posting_enabled": false,
   "browser_posting": true,
   "browser_grace_minutes": 30,
   "replies_enabled": false,
   "daily_limit": 24,
-  "note": "Switches for GitHub Actions posting. repo_sync.py copies daily_limit from the project config; the two switches are flipped only at switch-over.",
+  "note": "Jesse 2026-10-27「所有发帖和回复只能通过浏览器，把github那边的自动任务停掉」: every X-writing switch is off and the workflows only run when started by hand. Posts are sent by his browser only (next_post.py releases one item at a time; release_at in data/queue). repo_sync.py still pushes the queue here for the browser to read.",
   "min_gap_minutes": 60,
   "fast_replies_enabled": false,
   "follow_enabled": false,

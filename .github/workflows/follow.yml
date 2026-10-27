@@ -1,10 +1,8 @@
 name: follow
 # Auto-follow (scripts/auto_follow.py): at most 1 follow per run, paced to about 100 a day between 09:00 and 22:00
 # Beijing. Runs right after every posting run, which cron-job.org starts every 5 minutes. Only one run at a time.
+# Automatic trigger removed 2026-10-27 (Jesse: posts and replies only through the browser); start by hand only.
 on:
-  workflow_run:
-    workflows: [post]
-    types: [completed]
   workflow_dispatch:
     inputs:
       dry_run:
