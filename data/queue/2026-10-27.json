@@ -4,11 +4,11 @@
     {
       "id": "gm",
       "time": "07:51",
-      "status": "approved",
+      "status": "posted",
       "text": "{问候}蓝朋友们，{今天}{星期}，请问现在是我在上班，还是班在上我？？欢迎来评论区报到 #蓝V交友",
+      "posted_at": "2026-10-27T00:06:40.000Z",
       "card_text": "早上好，周二的班，是我上还是班上我？",
-      "extra": true,
-      "image": "media/images/2026-10-27/gm.png"
+      "extra": true
     },
     {
       "id": "p01",
