@@ -117,6 +117,67 @@
       "link": "https://www.thepaper.cn/newsDetail_forward_34332060",
       "extra": true,
       "image": "media/images/2026-10-27/news-20261026-1244-3.jpg"
+    },
+    {
+      "id": "news-20261026-1018-r2",
+      "time": "12:21",
+      "status": "approved",
+      "text": "网传简中区开通创作者收益的一共304个号。几千万人翻墙出来，最后能领老马低保的，比考公上岸的还少。",
+      "extra": true,
+      "image": "media/images/2026-10-27/news-20261026-1018-r2.jpg"
+    },
+    {
+      "id": "news-20261026-1244-2",
+      "time": "12:51",
+      "status": "approved",
+      "text": "川普说一句「今天不会有打击」，WTI跌2%到101美元。以后看油价不用看库存了，看川普的日历就行。中期选举前不打，选完再说。",
+      "link": "https://www.benzinga.com/news/politics/26/10/62581355/trump-iran-strike-oil-prices",
+      "extra": true,
+      "image": "media/images/2026-10-27/news-20261026-1244-2.jpg"
+    },
+    {
+      "id": "news-20261026-1244-4",
+      "time": "15:42",
+      "status": "approved",
+      "text": "「高光时刻插广告观众会烦」。把这话裱起来挂在每个国产app厂商的会议室里。",
+      "link": "https://www.thepaper.cn/newsDetail_forward_34331997",
+      "extra": true,
+      "image": "media/images/2026-10-27/news-20261026-1244-4.jpg"
+    },
+    {
+      "id": "news-20261026-1042-5",
+      "time": "16:12",
+      "status": "approved",
+      "text": "彭宇案之后十几年，大家不敢扶人。这回法院说，好心救人出了岔子不担责，总算站在了常识一边。判决书能不能让路人敢伸手，我不知道，但至少别再让人觉得救人要先算账。",
+      "link": "https://www.zhihu.com/question/2096897897677721632",
+      "extra": true,
+      "image": "media/images/2026-10-27/news-20261026-1042-5.jpg"
+    },
+    {
+      "id": "news-20261025-2238-4",
+      "time": "20:56",
+      "status": "approved",
+      "text": "网传大鹏说票房不是评价电影的唯一标准。我最喜欢的杨德昌、侯孝贤，哪部是靠票房被记住的？好片子卖不动太正常了，《吉祥如意》1357万，反倒让我更想去看了。",
+      "link": "https://www.jiemian.com/article/9882090.html",
+      "extra": true,
+      "image": "media/images/2026-10-27/news-20261025-2238-4.png"
+    },
+    {
+      "id": "news-20261025-1641-4",
+      "time": "21:26",
+      "status": "approved",
+      "text": "上海小孩越来越不会讲上海话，知乎都上热榜了。学校里长期只许讲普通话，现在又说要在幼儿园搞乡土文化教育。先把方言赶出去，再开课请回来，这叫闭环管理。",
+      "link": "https://www.thepaper.cn/newsDetail_forward_16164975",
+      "extra": true,
+      "image": "media/images/2026-10-27/news-20261025-1641-4.jpg"
+    },
+    {
+      "id": "news-20261025-2238-3",
+      "time": "22:37",
+      "status": "approved",
+      "text": "古偶剧名场面：赐死七万精锐铁骑、送太子去和亲、兵部尚书冻死。请把这三个剧情按离谱程度排个名，再说说历史上有没有哪个朝代真干过类似的事@grok",
+      "extra": true,
+      "image": "media/images/2026-10-27/news-20261025-2238-3.png"
     }
   ]
 }

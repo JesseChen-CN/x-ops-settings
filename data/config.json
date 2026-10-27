@@ -3,7 +3,7 @@
   "browser_posting": true,
   "browser_grace_minutes": 30,
   "replies_enabled": false,
-  "daily_limit": 8,
+  "daily_limit": 24,
   "note": "Switches for GitHub Actions posting. repo_sync.py copies daily_limit from the project config; the two switches are flipped only at switch-over.",
   "min_gap_minutes": 60,
   "fast_replies_enabled": false,
