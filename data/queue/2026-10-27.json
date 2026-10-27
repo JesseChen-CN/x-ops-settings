@@ -79,10 +79,10 @@
     {
       "id": "radar-20261026-1018-r1",
       "time": "09:51",
-      "status": "approved",
+      "status": "posted",
       "text": "拿“能画几只鹈鹕”来比各家AI订阅额度很科学。不过老板才不关心你画了几只鸟，他只关心能不能换掉三个人😂。",
-      "extra": true,
-      "image": "media/images/2026-10-27/radar-20261026-1018-r1.png"
+      "posted_at": "2026-10-27T02:12:19.000Z",
+      "extra": true
     },
     {
       "id": "radar-20261026-1018-r3",
@@ -178,6 +178,14 @@
       "text": "古偶剧名场面：赐死七万精锐铁骑、送太子去和亲、兵部尚书冻死。请把这三个剧情按离谱程度排个名，再说说历史上有没有哪个朝代真干过类似的事@grok",
       "extra": true,
       "image": "media/images/2026-10-27/news-20261025-2238-3.png"
+    },
+    {
+      "id": "adhoc-20261027-de-gruss",
+      "time": "11:40",
+      "status": "approved",
+      "text": "Hallo liebe Deutsche 👋 Kurze Frage: Landet man bei euch wirklich im Knast, wenn man den Hitlergruß zeigt? Stimmt das?",
+      "extra": true,
+      "image": "media/images/2026-10-27/adhoc-20261027-de-gruss.jpg"
     }
   ]
 }
