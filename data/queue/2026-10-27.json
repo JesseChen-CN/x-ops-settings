@@ -87,10 +87,10 @@
     {
       "id": "radar-20261026-1018-r3",
       "time": "10:51",
-      "status": "approved",
+      "status": "posted",
       "text": "为什么现在没人拦着要你装反诈app了？是骗子消失了吗？",
-      "extra": true,
-      "image": "media/images/2026-10-27/radar-20261026-1018-r3.jpg"
+      "posted_at": "2026-10-27T03:13:18.000Z",
+      "extra": true
     },
     {
       "id": "radar-20261026-1120-r1",
